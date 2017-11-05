@@ -1,10 +1,14 @@
 import socket
-from server_session import ServerSession
+from session import Session
+from player import Player
 import protocol
+from time import sleep
+import pickle
 
 
 current_sessions = []
 current_players = []
+
 
 HOST = '127.0.0.1'
 PORT = 7777
@@ -16,19 +20,21 @@ def new_session(information):
     
     game_name = information.split(protocol.__MSG_FIELD_SEP)[0]
     max_num_of_players = information.split(protocol.__MSG_FIELD_SEP)[1][0]
-    server_session = ServerSession('running', 1, game_name, 
+    session = Session('running', 1, game_name, 
                                    'sudoku_puzzles/sudoku_easy_1.csv', 
                                    'sudoku_puzzles/sudoku_easy_1_solution.csv', 
-                                   max_num_of_players)
-    server_session.game_start()
+                                   max_num_of_players,
+                                   current_players)
     
-    for i in server_session.game_state:
-        print i
+    session.game_start()
+    
+    current_sessions.append(session)
 
     
     
 def list_sessions():
     return current_sessions
+
 
     
                 
@@ -41,17 +47,37 @@ if __name__ == '__main__':
     server_socket.listen(backlog)
     
     while True: 
-        
+        #sleep(1)
         try:
             client_socket, client_addr = server_socket.accept()
-            header = client_socket.recv(recv_buffer_length)
-            if protocol.server_process(header) == protocol.__SA_CREATE_SESSION:
-                client_socket.send(protocol.__ACK)
-                information = client_socket.recv(recv_buffer_length)
-                new_session(information)
+            while True:
+                #sleep(1)
+                try:
+                    header = client_socket.recv(recv_buffer_length)
+                    if protocol.server_process(header) == protocol.__SA_NEW_PLAYER:
+                        player1 = Player(client_addr)
+                        current_players.append(player1)
+                        client_socket.send(protocol.__ACK)
 
-            else:
-                print 'error'
+                    elif protocol.server_process(header) == protocol.__SA_NICKNAME:
+                        player1.nickname = header.split(protocol.__MSG_FIELD_SEP)[1][:-1]
+                        client_socket.send(protocol.__ACK)
+
+                    elif protocol.server_process(header) == protocol.__SA_CREATE_SESSION:
+                        #information = client_socket.recv(recv_buffer_length)
+                        new_session(header)
+                        pickle_session = pickle.dumps(current_sessions[0])
+                        client_socket.send(pickle_session)
+                        #current_sessions.append(new_session)
+                        
+                    #elif protocol.server_process(header) == protocol.__REQ_UPDATE_GAME:
+                        
+
+                    elif header == protocol.__TERMINATOR:
+                        break
+                        
+                except KeyboardInterrupt as e:
+                    break
 
         except KeyboardInterrupt as e:
             break

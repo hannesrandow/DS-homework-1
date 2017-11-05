@@ -1,17 +1,17 @@
 import abc
 import csv
 import os
-#from server import Session
 
-class ServerSession(object):
+class Game(object):
     
-    def __init__(self, game_status, game_id, game_name, new_game_path, game_solution_path, max_num_of_players):
+    def __init__(self, game_status, game_id, game_name, new_game_path, game_solution_path, max_num_of_players, current_players):
         self.game_status = game_status
         self.game_id = game_id
         self.game_name = game_name
         self.new_game_path = new_game_path
         self.game_solution_path = game_solution_path
         self.max_num_of_players = max_num_of_players
+        self.current_players = current_players
         self.game_state = []
         self.game_solution = []
         

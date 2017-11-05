@@ -1,11 +1,11 @@
-class Player(Object):
+class Player(object):
     
-    def __init__(unique_id, current_session_id, client_ip, nickname):
-        self.unique_id = unique_id
+    def __init__(self, client_ip, nickname=None, current_session_id=None):
+        self.client_ip = client_ip
+        self.nickname = nickname
         self.current_session_id = current_session_id
         self.score = 0
-        self.client_ip = client_ip
-        slef.nickname = nickname
+
         
         
     #update the game
