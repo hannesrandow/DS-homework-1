@@ -8,8 +8,9 @@ __REQ_JOIN_SESSIONS = 'c2'
 __REQ_LEAVE_SESSION = 'c3'
 __REQ_CREATE_SESSION = 'c4'
 __REQ_NICKNAME = 'c5'
+__REQ_CURRENT_SESSIONS = 'c5'
 #make change to game
-__REQ_UPDATE_GAME = 'c6'
+__REQ_UPDATE_GAME = 'c7'
 
 
 #server responses
@@ -24,6 +25,8 @@ __RSP_GAME_UPDATE_INCORRECT = 'sr4.2'
 __SA_CREATE_SESSION = 'sa1'
 __SA_NEW_PLAYER = 'sa2' 
 __SA_NICKNAME = 'sa3'
+__SA_CURRENT_SESSIONS = 'sa4'
+__SA_UPDATE_GAME = 'sa5'
 
 
 #field separator for sending multiple values ---------------------------------
@@ -40,11 +43,11 @@ def server_process(message):
     elif message.startswith(__REQ_NICKNAME + __MSG_FIELD_SEP):
         return __SA_NICKNAME
     
-    elif message.startswith(__REQ_CURRENT_SESSIONS + __MSG_FIELD_SEP):
-        return __RSP_current_sessions
+    elif message.startswith(__REQ_CURRENT_SESSIONS):
+        return __SA_CURRENT_SESSIONS
     
     elif message.startswith(__REQ_CREATE_SESSION + __MSG_FIELD_SEP):
         return __SA_CREATE_SESSION
     
     elif message.startswith(__REQ_UPDATE_GAME + __MSG_FIELD_SEP):
-        return __REQ_UPDATE_GAME
+        return __SA_UPDATE_GAME

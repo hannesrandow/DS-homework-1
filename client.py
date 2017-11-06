@@ -7,8 +7,7 @@ import pickle
 HOST = '127.0.0.1'
 PORT = 7777
 
-def get_current_sessions():
-    pass
+
 
 def join_session():
     pass
@@ -23,52 +22,96 @@ def leave_session():
 
 
 
-def send_request(socket, m):
+
+
+def send_request(m):
     socket.sendall(m)
     rsp = socket.recv(10000)
     if rsp == protocol.__ACK:
         return True
     else:
         return pickle.loads(rsp)
+        
+
+        
+def update(user_action, current_session):
+    user_action = user_action.split(' ')
+    row = user_action[1]
+    column = user_action[2]
+    number = user_action[3]
+    
+    update_request = send_request(protocol.__REQ_UPDATE_GAME + protocol.__MSG_FIELD_SEP + 
+                                  row + protocol.__MSG_FIELD_SEP + column + protocol.__MSG_FIELD_SEP + number)
+    
+    if update_request.game_state != current_session.game_state:
+        print 'correct'
+    else:
+        print 'incorrect'
+    
+        
+def create_session(game_name, max_num_players):
+    new_session = send_request(protocol.__REQ_CREATE_SESSION + protocol.__MSG_FIELD_SEP + 
+                               game_name + protocol.__MSG_FIELD_SEP + max_num_players)
+    
+    return new_session
+
+
+def get_current_sessions():
+    current_sessions = send_request(protocol.__REQ_CURRENT_SESSIONS)
+    print 'Currently availabel sessions are: '
+    for session in current_sessions:
+        print '------------------ SESSION ---------------------' 
+        print session.game_name 
+        print session.game_id
+        print ' '.join([player.nickname for player in session.current_players])#session.current_players
+        print session.max_num_of_players
+        print '------------------ SESSION ---------------------' 
+        
+    
+    
+
+    
+def nickname(n):
+    send_request(protocol.__REQ_NICKNAME + protocol.__MSG_FIELD_SEP + n)
+    return 
+
+
+def connect():
+    send_request(protocol.__REQ_INITIAL_CONNECT)
+    return
+
+
 
 
 def process_response(m):
     pass
 
-def create_session(game_name, max_num_players):
-    new_session = send_request(socket, 
-                                       protocol.__REQ_CREATE_SESSION + protocol.__MSG_FIELD_SEP + 
-                                       game_name + protocol.__MSG_FIELD_SEP + max_num_players)
-    
-    return new_session
-    
-
-def nickname(n):
-    send_request(socket, protocol.__REQ_NICKNAME + protocol.__MSG_FIELD_SEP + n)
-    return 
-
-def connect():
-    send_request(socket, protocol.__REQ_INITIAL_CONNECT)
-    return
-
-
-
 if __name__ == '__main__':
     
     socket = socket(AF_INET, SOCK_STREAM)
     socket.connect((HOST, PORT))
-    try:
-        #initial_connect = send_request(socket, protocol.__REQ_INITIAL_CONNECT)
-        connect()
-        #requested_nickname = send_request(socket, protocol.__REQ_NICKNAME + protocol.__MSG_FIELD_SEP + 'first_user')
-        nickname('user1')
-        current_session = create_session('test_game', '5')
-
-        for i in current_session.game_state:
-            print i
-        #if socket.recv(1024) == protocol.__ACK:
-        #    socket.sendall(protocol.__REQ_UPDATE_GAME + protocol.__MSG_FIELD_SEP + '15-9' + protocol.__TERMINATOR)
-    except Exception as e:
-        print(e)
+    connect()
+    while True:
+        user_action = raw_input('enter action preceded by -flag: ')
+        try:
+            if user_action.startswith('-username'):
+                nickname(user_action.split(' ')[1])
+                print 'username created'
+            elif user_action.startswith('-newsession'):
+                #current_session = create_session('test_game', '5')
+                user_input = user_action.split(' ')
+                current_session = create_session(user_input[1], user_input[2])
+                print 'new session created'
+            elif user_action.startswith('-printsession'):
+                for i in current_session.game_state:
+                    print i
+            elif user_action.startswith('-getsessions'):
+                get_current_sessions()
+            elif user_action.startswith('-update'):
+                update(user_action, current_session)
+            #if socket.recv(1024) == protocol.__ACK:
+            #    socket.sendall(protocol.__REQ_UPDATE_GAME + protocol.__MSG_FIELD_SEP + '15-9' + protocol.__TERMINATOR)
+        except KeyboardInterrupt as e:
+            break
     
     

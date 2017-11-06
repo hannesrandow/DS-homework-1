@@ -18,16 +18,16 @@ recv_buffer_length = 1024
 
 def new_session(information):
     
-    game_name = information.split(protocol.__MSG_FIELD_SEP)[0]
-    max_num_of_players = information.split(protocol.__MSG_FIELD_SEP)[1]
+    game_name = information.split(protocol.__MSG_FIELD_SEP)[1]
+    max_num_of_players = information.split(protocol.__MSG_FIELD_SEP)[2]
     session = Session('running', 1, game_name, 
                                    'sudoku_puzzles/sudoku_easy_1.csv', 
                                    'sudoku_puzzles/sudoku_easy_1_solution.csv', 
                                    max_num_of_players,
                                    current_players)
+
     
-    session.game_start()
-    
+    session.game_start()    
     current_sessions.append(session)
 
     
@@ -62,7 +62,7 @@ if __name__ == '__main__':
                         client_socket.send(protocol.__ACK)
 
                     elif protocol.server_process(header) == protocol.__SA_NICKNAME:
-                        player1.nickname = header.split(protocol.__MSG_FIELD_SEP)[1][:-1]
+                        player1.nickname = header.split(protocol.__MSG_FIELD_SEP)[1]
                         client_socket.send(protocol.__ACK)
 
                     elif protocol.server_process(header) == protocol.__SA_CREATE_SESSION:
@@ -72,7 +72,14 @@ if __name__ == '__main__':
                         client_socket.send(pickle_session)
                         #current_sessions.append(new_session)
                         
-                    #elif protocol.server_process(header) == protocol.__REQ_UPDATE_GAME:
+                    elif protocol.server_process(header) == protocol.__SA_CURRENT_SESSIONS:
+                        pickle_current_sessions = pickle.dumps(current_sessions)
+                        client_socket.send(pickle_current_sessions)
+                        
+                    elif protocol.server_process(header) == protocol.__SA_UPDATE_GAME:
+                        current_sessions[0].update_game(header)
+                        pickle_session = pickle.dumps(current_sessions[0])
+                        client_socket.send(pickle_session)
                         
 
                     elif header == protocol.__TERMINATOR:
