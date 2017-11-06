@@ -19,7 +19,7 @@ recv_buffer_length = 1024
 def new_session(information):
     
     game_name = information.split(protocol.__MSG_FIELD_SEP)[0]
-    max_num_of_players = information.split(protocol.__MSG_FIELD_SEP)[1][0]
+    max_num_of_players = information.split(protocol.__MSG_FIELD_SEP)[1]
     session = Session('running', 1, game_name, 
                                    'sudoku_puzzles/sudoku_easy_1.csv', 
                                    'sudoku_puzzles/sudoku_easy_1_solution.csv', 
@@ -34,6 +34,8 @@ def new_session(information):
     
 def list_sessions():
     return current_sessions
+
+
 
 
     

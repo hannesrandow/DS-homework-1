@@ -34,17 +34,17 @@ __TERMINATOR = '*'
 
 def server_process(message):
     
-    if message.startswith(__REQ_INITIAL_CONNECT + __MSG_FIELD_SEP) and message.endswith(__TERMINATOR):
+    if message.startswith(__REQ_INITIAL_CONNECT):
         return __SA_NEW_PLAYER
     
-    elif message.startswith(__REQ_NICKNAME + __MSG_FIELD_SEP) and message.endswith(__TERMINATOR):
+    elif message.startswith(__REQ_NICKNAME + __MSG_FIELD_SEP):
         return __SA_NICKNAME
     
-    elif message.startswith(__REQ_CURRENT_SESSIONS + __MSG_FIELD_SEP) and message.endswith(__TERMINATOR):
+    elif message.startswith(__REQ_CURRENT_SESSIONS + __MSG_FIELD_SEP):
         return __RSP_current_sessions
     
-    elif message.startswith(__REQ_CREATE_SESSION + __MSG_FIELD_SEP) and message.endswith(__TERMINATOR):
+    elif message.startswith(__REQ_CREATE_SESSION + __MSG_FIELD_SEP):
         return __SA_CREATE_SESSION
     
-    elif message.startswith(__REQ_UPDATE_GAME + __MSG_FIELD_SEP) and message.endswith(__TERMINATOR):
+    elif message.startswith(__REQ_UPDATE_GAME + __MSG_FIELD_SEP):
         return __REQ_UPDATE_GAME
