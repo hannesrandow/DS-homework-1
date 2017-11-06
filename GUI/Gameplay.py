@@ -4,13 +4,17 @@ import tkMessageBox
 LENGTH = 470
 MARGIN = 10
 WIDTH_ENTRIES = 1
+CELL = (LENGTH - 2 * MARGIN) / 9
 
 class Gameplay:
     def __init__(self):
         self.root = Tk()
+        self.row = 0
+        self.col = 0
         self.canvasSudoku = Canvas(self.root, width=LENGTH, height=LENGTH)
         self.canvasSudoku.grid(row=0)
         self.draw_grid()
+        self.draw_numbers()
         self.frameScoreInput = Frame(self.root)
         self.frameScoreInput.grid(row=0, column=1, padx=10, pady=10)
         self.titleScore = Label(self.frameScoreInput, text="Scores:", font="Arial 12 bold")
@@ -77,16 +81,47 @@ class Gameplay:
             self.valueValue.set(self.value[:1])
 
     def draw_grid(self):
-        cellLength = (LENGTH - 2 * MARGIN) / 9
         for i in range(10):
             # blue lines for 3x3 fields
             color = "blue" if i%3 == 0 else "gray"
             x0 = MARGIN
             x1 = LENGTH - MARGIN
-            y = MARGIN + i * cellLength
+            y = MARGIN + i * CELL
             # horizontal lines
             self.canvasSudoku.create_line(x0, y, x1, y, fill=color)
             # vertical lines
             self.canvasSudoku.create_line(y, x0, y, x1, fill=color)
+
+    def draw_numbers(self):
+        self.canvasSudoku.delete("numbers")
+        for i in range(9):
+            for j in range(9):
+                x = MARGIN + j * CELL + CELL / 2
+                y = MARGIN + i * CELL + CELL / 2
+                cellValue = "1"
+                color = "black"
+                self.canvasSudoku.create_text(x, y, text=cellValue, font="Arial 12", tags="numbers", fill=color)
+
+    def cell_clicked(self, event):
+        x, y = event.x, event.y
+        if (MARGIN < x < LENGTH - MARGIN):
+            self.canvasSudoku.focus_set()
+        row, col = (y - MARGIN) / LENGTH, (x - MARGIN) / LENGTH
+        # deselect cell if it was already selected
+        if (row, col) == (self.row, self.col):
+            self.row, self.col = -1, -1
+        else: # TODO: if game[row][col] == 0 (empty)
+            self.row, self.col = row, col
+        self.draw_cursor()
+
+    def draw_cursor(self):
+        self.canvasSudoku.delete("cursor")
+        if self.row >= 0 and self.col >= 0:
+            x0 = MARGIN + self.col * LENGTH + 1
+            y0 = MARGIN + self.row * LENGTH + 1
+            x1 = MARGIN + (self.col + 1) * LENGTH - 1
+            y1 = MARGIN + (self.row + 1) * LENGTH - 1
+            self.canvasSudoku.create_rectangle(x0, y0, x1, y1, outline="red", tags="cursor")
+
 
 Gameplay()
