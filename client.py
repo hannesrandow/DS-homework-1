@@ -3,6 +3,7 @@ from os import getpid
 import protocol
 from time import sleep
 import pickle
+from GUI.EnterNicknameDialog import *
 
 HOST = '127.0.0.1'
 PORT = 7789
@@ -97,7 +98,9 @@ if __name__ == '__main__':
         user_action = raw_input('enter action preceded by -flag: ')
         try:
             if user_action.startswith('-username'):
-                nickname(user_action.split(' ')[1])
+                e = EnterNicknameDialog()
+                nickname(e.nickname)
+                # nickname(user_action.split(' ')[1])
                 print 'username created'
             elif user_action.startswith('-newsession'):
                 #current_session = create_session('test_game', '5')
