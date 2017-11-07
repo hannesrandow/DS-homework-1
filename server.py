@@ -32,6 +32,18 @@ def new_session(information):
     
     session.game_start()    
     current_sessions.append(session)
+    
+
+def join_session(information):
+    
+    req_ses_id = int(information.split(protocol.__MSG_FIELD_SEP)[1])
+    for session in current_sessions:
+        if session.game_id == req_ses_id:
+            break
+    if session.max_num_of_players - len(session.current_players) > 0:
+        return (True, session)
+    else:
+        return (False, '_')
 
     
     
@@ -42,6 +54,8 @@ def list_sessions():
 
 def client_thread(sock, addr):
     while True:
+        print 'created new thread'
+        sleep(1)
         try:
             header = sock.recv(recv_buffer_length)
             if protocol.server_process(header) == protocol.__SA_NEW_PLAYER:
@@ -58,7 +72,15 @@ def client_thread(sock, addr):
                 new_session(header)
                 pickle_session = pickle.dumps(current_sessions[0])
                 sock.send(pickle_session)
-                #current_sessions.append(new_session)
+            
+            elif protocol.server_process(header) == protocol.__SA_JOIN_SESSION:
+                reqest_session = join_session(header)
+                if request_session[0]:
+                    request_session[1].current_players.append(player)
+                    pickle_session = pickle.dumps(request_session[0])
+                    sock.send(pickle_session)
+                else:
+                    sock.send(protocol.__RSP_SESSION_FULL)
                         
             elif protocol.server_process(header) == protocol.__SA_CURRENT_SESSIONS:
                 pickle_current_sessions = pickle.dumps(current_sessions)
@@ -81,25 +103,22 @@ if __name__ == '__main__':
     
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((HOST, PORT))
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     backlog = 0
     #server_socket.listen(backlog)
     
     threads = []
-    
-    while True: 
-        server_socket.listen(backlog)
+    server_socket.listen(backlog)
+    while True:
         try:
             client_socket, client_addr = server_socket.accept()
-            client_addr_sockets.append((client_addr, client_socket))
-            client_thread = threading.Thread(target=client_thread, args=(client_socket, client_addr))
-            client_thread.start()
-            threads.append(client_thread)
+            threading.Thread(target=client_thread, args=(client_socket, client_addr)).start()
         except KeyboardInterrupt as e:
             break
         
         
-    for thread in threads:
-        thread.join()
+    #for thread in threads:
+    #    thread.join()
     server_socket.close()
 
     

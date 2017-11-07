@@ -4,7 +4,7 @@ __ACK = 'ACK'
 #client requests 
 __REQ_INITIAL_CONNECT = 'c0'
 __REQ_CURRENT_SESSIONS = 'c1'
-__REQ_JOIN_SESSIONS = 'c2'
+__REQ_JOIN_SESSION = 'c2'
 __REQ_LEAVE_SESSION = 'c3'
 __REQ_CREATE_SESSION = 'c4'
 __REQ_NICKNAME = 'c5'
@@ -21,12 +21,15 @@ __RSP_LEAVE_SESSION = 'sr3'
 __RSP_GAME_UPDATE_CORRECT = 'sr4.1'
 __RSP_GAME_UPDATE_INCORRECT = 'sr4.2'
 
+
 #server actions
 __SA_CREATE_SESSION = 'sa1'
 __SA_NEW_PLAYER = 'sa2' 
 __SA_NICKNAME = 'sa3'
 __SA_CURRENT_SESSIONS = 'sa4'
 __SA_UPDATE_GAME = 'sa5'
+__SA_JOIN_SESSION = 'sa6'
+
 
 
 #field separator for sending multiple values ---------------------------------
@@ -51,3 +54,6 @@ def server_process(message):
     
     elif message.startswith(__REQ_UPDATE_GAME + __MSG_FIELD_SEP):
         return __SA_UPDATE_GAME
+    
+    elif message.startswith(__REQ_JOIN_SESSION+ __MSG_FIELD_SEP):
+        return __SA_JOIN_SESSION
