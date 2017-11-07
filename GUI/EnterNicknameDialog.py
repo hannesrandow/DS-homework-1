@@ -31,3 +31,4 @@ class EnterNicknameDialog:
         # at first clear entry
         self.enterNickname.delete(0, 'end')
         self.enterNickname.insert(0, self.listNicknames.get(ACTIVE))
+

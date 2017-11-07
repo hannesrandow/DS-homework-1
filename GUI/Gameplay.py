@@ -30,6 +30,7 @@ class Gameplay:
             self.lblScores.append(self.lblScore)
             self.lblScore.pack()
 
+        '''
         # to allow just typing in 1 number in the entries
         self.rowValue = StringVar()
         self.rowValue.trace('w', self.limit_row_input)
@@ -38,7 +39,6 @@ class Gameplay:
         self.valueValue = StringVar()
         self.valueValue.trace('w', self.limit_value_input)
 
-        '''
         self.frameInput = Frame(self.frameScoreInput)
         self.frameInput.pack(pady=20)
         self.lblRow = Label(self.frameInput, text="Row: ")
