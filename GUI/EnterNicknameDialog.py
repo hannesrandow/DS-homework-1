@@ -5,6 +5,7 @@ import tkMessageBox
 class EnterNicknameDialog:
     def __init__(self):
         self.root = Tk()
+        self.nickname = ""
         self.lblNickname = Label(self.root, text="Please enter your Nickname: ")
         self.lblNickname.grid(row=0)
         self.enterNickname = Entry(self.root)
@@ -22,6 +23,7 @@ class EnterNicknameDialog:
         name = self.enterNickname.get()
         # TODO: Nickname has to be passed to the server
         if len(name) <= 8 and name.isalnum():
+            self.nickname = name
             self.root.destroy()
         else:
             tkMessageBox.showerror("Wrong Input", "Please just use numbers or letters (max 8)!")
