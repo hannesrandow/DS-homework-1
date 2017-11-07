@@ -5,7 +5,7 @@ from time import sleep
 import pickle
 
 HOST = '127.0.0.1'
-PORT = 7777
+PORT = 7789
 
 
 
@@ -47,6 +47,8 @@ def update(user_action, current_session):
         print 'correct'
     else:
         print 'incorrect'
+    
+    return update_request
     
         
 def create_session(game_name, max_num_players):
@@ -108,9 +110,13 @@ if __name__ == '__main__':
             elif user_action.startswith('-getsessions'):
                 get_current_sessions()
             elif user_action.startswith('-update'):
-                update(user_action, current_session)
-            #if socket.recv(1024) == protocol.__ACK:
-            #    socket.sendall(protocol.__REQ_UPDATE_GAME + protocol.__MSG_FIELD_SEP + '15-9' + protocol.__TERMINATOR)
+                current_session = update(user_action, current_session)
+                
+            elif user_action.startswith('-solution'):
+                inf = user_action.split(' ')
+            elif user_action.startswith(protocol.__TERMINATOR):
+                send_request(protocol.__TERMINATOR)
+                
         except KeyboardInterrupt as e:
             break
     

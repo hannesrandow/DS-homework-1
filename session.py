@@ -37,11 +37,7 @@ class Session(object):
     
 
     def update_game(self, information):
-        #protocol.__REQ_UPDATE_GAME + protocol.__MSG_FIELD_SEP + 
-        #                          row + protocol.__MSG_FIELD_SEP + column + protocol.__MSG_FIELD_SEP + number
-        #print protocol.__MSG_FIELD_SEP
-        #print information
-        #information = information.split(protocol.__MSG_FIELD_SEP)
+        
         information = information.split(':')
         row = int(information[1])
         column = int(information[2])
@@ -49,8 +45,7 @@ class Session(object):
         
         if self.game_state[row][column] == 0:
             if self.game_solution[row][column] == number:
-                self.game_state[row][column] == number
-                #rsp = protocol.__RSP_GAME_UPDATE_CORRECT"""
+                self.game_state[row][column] = number
 
     
     def game_start(self):
