@@ -13,6 +13,8 @@ class Gameplay:
         self.col = 0
         self.canvasSudoku = Canvas(self.root, width=LENGTH, height=LENGTH)
         self.canvasSudoku.grid(row=0)
+        self.canvasSudoku.bind("<Button-1>", self.cell_clicked)
+        self.canvasSudoku.bind("<Key>", self.key_pressed)
         self.draw_grid()
         self.draw_numbers()
         self.frameScoreInput = Frame(self.root)
@@ -36,6 +38,7 @@ class Gameplay:
         self.valueValue = StringVar()
         self.valueValue.trace('w', self.limit_value_input)
 
+        '''
         self.frameInput = Frame(self.frameScoreInput)
         self.frameInput.pack(pady=20)
         self.lblRow = Label(self.frameInput, text="Row: ")
@@ -50,15 +53,18 @@ class Gameplay:
         self.lblValue.grid(row=0, column=4)
         self.entryValue = Entry(self.frameInput, width=WIDTH_ENTRIES, textvariable=self.valueValue)
         self.entryValue.grid(row=0, column=5)
-        self.btnConfirmGuess = Button(self.frameInput, text="Guess", width=20, command=self.confirm_guess)
-        self.btnConfirmGuess.grid(row=1, columnspan=6, pady=10)
+        self.btnLeaveSession = Button(self.frameScoreInput, text="Leave Game", width=20, command=self.leave_session)
+        self.btnLeaveSession.pack(pady=100)
+        '''
+        self.btnLeaveSession = Button(self.frameScoreInput, text="Leave Game", width=20, command=self.leave_session)
+        self.btnLeaveSession.pack(pady=100)
         self.root.mainloop()
         tkMessageBox.showinfo("Game finished", "Winner is: ")
 
-    def confirm_guess(self):
-        # TODO: enter numbers in sudoku field
+    def leave_session(self):
         self.root.destroy()
 
+    '''
     def limit_row_input(self, *args):
         self.value = self.rowValue.get()
         if not self.value.isdigit() or self.value == 0:
@@ -79,6 +85,7 @@ class Gameplay:
             self.valueValue.set("")
         if len(self.value) > 1:
             self.valueValue.set(self.value[:1])
+    '''
 
     def draw_grid(self):
         for i in range(10):
@@ -98,6 +105,7 @@ class Gameplay:
             for j in range(9):
                 x = MARGIN + j * CELL + CELL / 2
                 y = MARGIN + i * CELL + CELL / 2
+                # TODO: values from CSV / Game class
                 cellValue = "1"
                 color = "black"
                 self.canvasSudoku.create_text(x, y, text=cellValue, font="Arial 12", tags="numbers", fill=color)
@@ -106,7 +114,7 @@ class Gameplay:
         x, y = event.x, event.y
         if (MARGIN < x < LENGTH - MARGIN):
             self.canvasSudoku.focus_set()
-        row, col = (y - MARGIN) / LENGTH, (x - MARGIN) / LENGTH
+        row, col = (y - MARGIN) / CELL, (x - MARGIN) / CELL
         # deselect cell if it was already selected
         if (row, col) == (self.row, self.col):
             self.row, self.col = -1, -1
@@ -117,11 +125,18 @@ class Gameplay:
     def draw_cursor(self):
         self.canvasSudoku.delete("cursor")
         if self.row >= 0 and self.col >= 0:
-            x0 = MARGIN + self.col * LENGTH + 1
-            y0 = MARGIN + self.row * LENGTH + 1
-            x1 = MARGIN + (self.col + 1) * LENGTH - 1
-            y1 = MARGIN + (self.row + 1) * LENGTH - 1
+            x0 = MARGIN + self.col * CELL + 1
+            y0 = MARGIN + self.row * CELL + 1
+            x1 = MARGIN + (self.col + 1) * CELL - 1
+            y1 = MARGIN + (self.row + 1) * CELL - 1
             self.canvasSudoku.create_rectangle(x0, y0, x1, y1, outline="red", tags="cursor")
+
+    def key_pressed(self, event):
+        if self.row >= 0 and self.col >= 0 and event.char in "1234567890":
+            # TODO: self.game.puzzle[self.row][self.col] = int(event.char)
+            self.col, self.row = -1, -1
+            self.draw_numbers()
+            self.draw_cursor()
 
 
 Gameplay()
