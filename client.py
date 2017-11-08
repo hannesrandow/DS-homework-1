@@ -9,93 +9,95 @@ from GUI.Gameplay import *
 HOST = '127.0.0.1'
 PORT = 7789
 
-def leave_session():
-    pass
+class Client:
+    def leave_session(self):
+        pass
 
 
 
 
 
-def send_request(m):
-    socket.sendall(m)
-    rsp = socket.recv(10000)
-    if rsp == protocol.__ACK:
-        return True
-    elif rsp == protocol.__RSP_SESSION_FULL:
-        return False
-    else:
-        return pickle.loads(rsp)
-        
-
-        
-def update(user_action, current_session):
-    user_action = user_action.split(' ')
-    row = user_action[1]
-    column = user_action[2]
-    number = user_action[3]
-    
-    update_request = send_request(protocol.__REQ_UPDATE_GAME + protocol.__MSG_FIELD_SEP + 
-                                  row + protocol.__MSG_FIELD_SEP + column + protocol.__MSG_FIELD_SEP + number)
-    
-    if update_request.game_state != current_session.game_state:
-        print 'correct'
-    else:
-        print 'incorrect'
-    
-    return update_request
-    
-        
-def create_session(game_name, max_num_players):
-    new_session = send_request(protocol.__REQ_CREATE_SESSION + protocol.__MSG_FIELD_SEP + 
-                               game_name + protocol.__MSG_FIELD_SEP + max_num_players)
-    
-    return new_session
-
-
-def get_current_sessions():
-    current_sessions = send_request(protocol.__REQ_CURRENT_SESSIONS)
-    print 'Currently availabel sessions are: '
-    for session in current_sessions:
-        print '------------------ SESSION ---------------------' 
-        print session.game_name 
-        print session.game_id
-        print ' '.join([player.nickname for player in session.current_players])#session.current_players
-        print session.max_num_of_players
-        print '------------------ SESSION ---------------------' 
-        
-    
-    
-
-    
-def nickname(n):
-    send_request(protocol.__REQ_NICKNAME + protocol.__MSG_FIELD_SEP + n)
-    return 
-
-
-def connect():
-    send_request(protocol.__REQ_INITIAL_CONNECT)
-    return
-
-def join_session(user_action):
-    session_id = user_action.split(' ')[1]
-    rsp = send_request(protocol.__REQ_JOIN_SESSION + protocol.__MSG_FIELD_SEP + session_id)
-    if type(rsp) != bool:
-        return rsp
-    else:
-        return 'session full'
-    
-    
+    def send_request(self, m):
+        socket.sendall(m)
+        rsp = socket.recv(10000)
+        if rsp == protocol.__ACK:
+            return True
+        elif rsp == protocol.__RSP_SESSION_FULL:
+            return False
+        else:
+            return pickle.loads(rsp)
 
 
 
-def process_response(m):
-    pass
+    def update(self, user_action, current_session):
+        user_action = user_action.split(' ')
+        row = user_action[1]
+        column = user_action[2]
+        number = user_action[3]
+
+        update_request = self.send_request(protocol.__REQ_UPDATE_GAME + protocol.__MSG_FIELD_SEP +
+                                      row + protocol.__MSG_FIELD_SEP + column + protocol.__MSG_FIELD_SEP + number)
+
+        if update_request.game_state != current_session.game_state:
+            print 'correct'
+        else:
+            print 'incorrect'
+
+        return update_request
+
+
+    def create_session(self, game_name, max_num_players):
+        new_session = self.send_request(protocol.__REQ_CREATE_SESSION + protocol.__MSG_FIELD_SEP +
+                                   game_name + protocol.__MSG_FIELD_SEP + max_num_players)
+
+        return new_session
+
+
+    def get_current_sessions(self):
+        current_sessions = self.send_request(protocol.__REQ_CURRENT_SESSIONS)
+        print 'Currently availabel sessions are: '
+        for session in current_sessions:
+            print '------------------ SESSION ---------------------'
+            print session.game_name
+            print session.game_id
+            print ' '.join([player.nickname for player in session.current_players])#session.current_players
+            print session.max_num_of_players
+            print '------------------ SESSION ---------------------'
+
+
+
+
+
+    def nickname(self, n):
+        self.send_request(protocol.__REQ_NICKNAME + protocol.__MSG_FIELD_SEP + n)
+        return
+
+
+    def connect(self):
+        self.send_request(protocol.__REQ_INITIAL_CONNECT)
+        return
+
+    def join_session(self, user_action):
+        session_id = user_action.split(' ')[1]
+        rsp = self.send_request(protocol.__REQ_JOIN_SESSION + protocol.__MSG_FIELD_SEP + session_id)
+        if type(rsp) != bool:
+            return rsp
+        else:
+            return 'session full'
+
+
+
+
+
+    def process_response(self, m):
+        pass
 
 if __name__ == '__main__':
-    
+
+    client = Client()
     socket = socket(AF_INET, SOCK_STREAM)
     socket.connect((HOST, PORT))
-    connect()
+    client.connect()
     while True:
         sleep(1)
         print "in while"
@@ -104,35 +106,35 @@ if __name__ == '__main__':
             gameplayGUI = None
             if user_action.startswith('-username'):
                 e = EnterNicknameDialog()
-                nickname(e.nickname)
+                client.nickname(e.nickname)
                 # nickname(user_action.split(' ')[1])
                 print 'username created'
             elif user_action.startswith('-newsession'):
                 #current_session = create_session('test_game', '5')
                 user_input = user_action.split(' ')
-                current_session = create_session(user_input[1], user_input[2])
+                current_session = client.create_session(user_input[1], user_input[2])
                 print 'new session created'
             elif user_action.startswith('-printsession'):
                 for i in current_session.game_state:
                     print i
             elif user_action.startswith('-getsessions'):
-                get_current_sessions()
+                client.get_current_sessions()
             elif user_action.startswith('-startSession'):
                 # TODO: client as a class or creating a thread for the GUI for updating
                 gameplayGUI = Gameplay(current_session)
             elif user_action.startswith('-update'):
-                current_session = update(user_action, current_session)
+                current_session = client.update(user_action, current_session)
                 # TODO: gameplayGUI.update(current_session)
             elif user_action.startswith('-solution'):
                 inf = user_action.split(' ')
             elif user_action.startswith('-join'):
-                rsp = join_session(user_action)
+                rsp = client.join_session(user_action)
                 if type(rsp) == str:
                     print rsp
                 else:
                     current_session = rsp
             elif user_action.startswith(protocol.__TERMINATOR):
-                send_request(protocol.__TERMINATOR)
+                client.send_request(protocol.__TERMINATOR)
                 
         except KeyboardInterrupt as e:
             break

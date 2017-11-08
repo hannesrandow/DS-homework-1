@@ -7,8 +7,8 @@ WIDTH_ENTRIES = 1
 CELL = (LENGTH - 2 * MARGIN) / 9
 
 class Gameplay:
-    def __init__(self, current_session, client):
-        self.client = client
+    def __init__(self, current_session):
+        # self.client = client
         self.root = Tk()
         self.row = 0
         self.col = 0
