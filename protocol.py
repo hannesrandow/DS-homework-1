@@ -1,59 +1,58 @@
 #acknowledgement
-__ACK = 'ACK'
+_ACK = 'ACK'
 
 #client requests 
-__REQ_INITIAL_CONNECT = 'c0'
-__REQ_CURRENT_SESSIONS = 'c1'
-__REQ_JOIN_SESSION = 'c2'
-__REQ_LEAVE_SESSION = 'c3'
-__REQ_CREATE_SESSION = 'c4'
-__REQ_NICKNAME = 'c5'
-__REQ_CURRENT_SESSIONS = 'c5'
+_REQ_INITIAL_CONNECT = 'c0'
+_REQ_CURRENT_SESSIONS = 'c1'
+_REQ_JOIN_SESSION = 'c2'
+_REQ_LEAVE_SESSION = 'c3'
+_REQ_CREATE_SESSION = 'c4'
+_REQ_NICKNAME = 'c5'
 #make change to game
-__REQ_UPDATE_GAME = 'c7'
+_REQ_UPDATE_GAME = 'c7'
 
 
 #server responses
-__RSP_CURRENT_SESSIONS = 'sr1'
-__RSP_SESSION_JOINED = 'sr2.1'
-__RSP_SESSION_FULL = 'sr2.2'
-__RSP_LEAVE_SESSION = 'sr3'
-__RSP_GAME_UPDATE_CORRECT = 'sr4.1'
-__RSP_GAME_UPDATE_INCORRECT = 'sr4.2'
+_RSP_CURRENT_SESSIONS = 'sr1'
+_RSP_SESSION_JOINED = 'sr2.1'
+_RSP_SESSION_FULL = 'sr2.2'
+_RSP_LEAVE_SESSION = 'sr3'
+_RSP_GAME_UPDATE_CORRECT = 'sr4.1'
+_RSP_GAME_UPDATE_INCORRECT = 'sr4.2'
 
 
 #server actions
-__SA_CREATE_SESSION = 'sa1'
-__SA_NEW_PLAYER = 'sa2' 
-__SA_NICKNAME = 'sa3'
-__SA_CURRENT_SESSIONS = 'sa4'
-__SA_UPDATE_GAME = 'sa5'
-__SA_JOIN_SESSION = 'sa6'
+_SA_CREATE_SESSION = 'sa1'
+_SA_NEW_PLAYER = 'sa2'
+_SA_NICKNAME = 'sa3'
+_SA_CURRENT_SESSIONS = 'sa4'
+_SA_UPDATE_GAME = 'sa5'
+_SA_JOIN_SESSION = 'sa6'
 
 
 
 #field separator for sending multiple values ---------------------------------
-__MSG_FIELD_SEP = ':'
+_MSG_FIELD_SEP = ':'
 
 #message terminator character
-__TERMINATOR = '*'
+_TERMINATOR = '*'
 
 def server_process(message):
     
-    if message.startswith(__REQ_INITIAL_CONNECT):
-        return __SA_NEW_PLAYER
+    if message.startswith(_REQ_INITIAL_CONNECT):
+        return _SA_NEW_PLAYER
     
-    elif message.startswith(__REQ_NICKNAME + __MSG_FIELD_SEP):
-        return __SA_NICKNAME
+    elif message.startswith(_REQ_NICKNAME + _MSG_FIELD_SEP):
+        return _SA_NICKNAME
     
-    elif message.startswith(__REQ_CURRENT_SESSIONS):
-        return __SA_CURRENT_SESSIONS
+    elif message.startswith(_REQ_CURRENT_SESSIONS):
+        return _SA_CURRENT_SESSIONS
     
-    elif message.startswith(__REQ_CREATE_SESSION + __MSG_FIELD_SEP):
-        return __SA_CREATE_SESSION
+    elif message.startswith(_REQ_CREATE_SESSION + _MSG_FIELD_SEP):
+        return _SA_CREATE_SESSION
     
-    elif message.startswith(__REQ_UPDATE_GAME + __MSG_FIELD_SEP):
-        return __SA_UPDATE_GAME
+    elif message.startswith(_REQ_UPDATE_GAME + _MSG_FIELD_SEP):
+        return _SA_UPDATE_GAME
     
-    elif message.startswith(__REQ_JOIN_SESSION+ __MSG_FIELD_SEP):
-        return __SA_JOIN_SESSION
+    elif message.startswith(_REQ_JOIN_SESSION+ _MSG_FIELD_SEP):
+        return _SA_JOIN_SESSION

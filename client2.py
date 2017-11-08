@@ -17,9 +17,9 @@ def leave_session():
 def send_request(m):
     socket.sendall(m)
     rsp = socket.recv(10000)
-    if rsp == protocol.__ACK:
+    if rsp == protocol._ACK:
         return True
-    elif rsp == protocol.__RSP_SESSION_FULL:
+    elif rsp == protocol._RSP_SESSION_FULL:
         return False
     else:
         return pickle.loads(rsp)
@@ -32,8 +32,8 @@ def update(user_action, current_session):
     column = user_action[2]
     number = user_action[3]
     
-    update_request = send_request(protocol.__REQ_UPDATE_GAME + protocol.__MSG_FIELD_SEP + 
-                                  row + protocol.__MSG_FIELD_SEP + column + protocol.__MSG_FIELD_SEP + number)
+    update_request = send_request(protocol._REQ_UPDATE_GAME + protocol._MSG_FIELD_SEP +
+                                  row + protocol._MSG_FIELD_SEP + column + protocol._MSG_FIELD_SEP + number)
     
     if update_request.game_state != current_session.game_state:
         print 'correct'
@@ -44,14 +44,14 @@ def update(user_action, current_session):
     
         
 def create_session(game_name, max_num_players):
-    new_session = send_request(protocol.__REQ_CREATE_SESSION + protocol.__MSG_FIELD_SEP + 
-                               game_name + protocol.__MSG_FIELD_SEP + max_num_players)
+    new_session = send_request(protocol._REQ_CREATE_SESSION + protocol._MSG_FIELD_SEP +
+                               game_name + protocol._MSG_FIELD_SEP + max_num_players)
     
     return new_session
 
 
 def get_current_sessions():
-    current_sessions = send_request(protocol.__REQ_CURRENT_SESSIONS)
+    current_sessions = send_request(protocol._REQ_CURRENT_SESSIONS)
     print 'Currently availabel sessions are: '
     for session in current_sessions:
         print '------------------ SESSION ---------------------' 
@@ -66,17 +66,17 @@ def get_current_sessions():
 
     
 def nickname(n):
-    send_request(protocol.__REQ_NICKNAME + protocol.__MSG_FIELD_SEP + n)
+    send_request(protocol._REQ_NICKNAME + protocol._MSG_FIELD_SEP + n)
     return 
 
 
 def connect():
-    send_request(protocol.__REQ_INITIAL_CONNECT)
+    send_request(protocol._REQ_INITIAL_CONNECT)
     return
 
 def join_session(user_action):
     session_id = user_action.split(' ')[1]
-    rsp = send_request(protocol.__REQ_JOIN_SESSION + protocol.__MSG_FIELD_SEP + session_id)
+    rsp = send_request(protocol._REQ_JOIN_SESSION + protocol._MSG_FIELD_SEP + session_id)
     if type(rsp) != bool:
         return rsp
     else:
@@ -123,8 +123,8 @@ if __name__ == '__main__':
                     print rsp
                 else:
                     current_session = rsp
-            elif user_action.startswith(protocol.__TERMINATOR):
-                send_request(protocol.__TERMINATOR)
+            elif user_action.startswith(protocol._TERMINATOR):
+                send_request(protocol._TERMINATOR)
                 
         except KeyboardInterrupt as e:
             break

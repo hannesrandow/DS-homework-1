@@ -21,8 +21,8 @@ recv_buffer_length = 1024
 
 def new_session(information):
     
-    game_name = information.split(protocol.__MSG_FIELD_SEP)[1]
-    max_num_of_players = information.split(protocol.__MSG_FIELD_SEP)[2]
+    game_name = information.split(protocol._MSG_FIELD_SEP)[1]
+    max_num_of_players = information.split(protocol._MSG_FIELD_SEP)[2]
     session = Session('running', 1, game_name, 
                                    'sudoku_puzzles/sudoku_easy_1.csv', 
                                    'sudoku_puzzles/sudoku_easy_1_solution.csv', 
@@ -36,7 +36,7 @@ def new_session(information):
 
 def join_session(information):
     
-    req_ses_id = int(information.split(protocol.__MSG_FIELD_SEP)[1])
+    req_ses_id = int(information.split(protocol._MSG_FIELD_SEP)[1])
     for session in current_sessions:
         if session.game_id == req_ses_id:
             break
@@ -58,40 +58,40 @@ def client_thread(sock, addr):
         sleep(1)
         try:
             header = sock.recv(recv_buffer_length)
-            if protocol.server_process(header) == protocol.__SA_NEW_PLAYER:
+            if protocol.server_process(header) == protocol._SA_NEW_PLAYER:
                 player = Player(addr)
                 current_players.append(player)
-                sock.send(protocol.__ACK)
+                sock.send(protocol._ACK)
 
-            elif protocol.server_process(header) == protocol.__SA_NICKNAME:
-                player.nickname = header.split(protocol.__MSG_FIELD_SEP)[1]
-                sock.send(protocol.__ACK)
+            elif protocol.server_process(header) == protocol._SA_NICKNAME:
+                player.nickname = header.split(protocol._MSG_FIELD_SEP)[1]
+                sock.send(protocol._ACK)
 
-            elif protocol.server_process(header) == protocol.__SA_CREATE_SESSION:
+            elif protocol.server_process(header) == protocol._SA_CREATE_SESSION:
                 #information = client_socket.recv(recv_buffer_length)
                 new_session(header)
                 pickle_session = pickle.dumps(current_sessions[0])
                 sock.send(pickle_session)
             
-            elif protocol.server_process(header) == protocol.__SA_JOIN_SESSION:
+            elif protocol.server_process(header) == protocol._SA_JOIN_SESSION:
                 reqest_session = join_session(header)
                 if request_session[0]:
                     request_session[1].current_players.append(player)
                     pickle_session = pickle.dumps(request_session[0])
                     sock.send(pickle_session)
                 else:
-                    sock.send(protocol.__RSP_SESSION_FULL)
+                    sock.send(protocol._RSP_SESSION_FULL)
                         
-            elif protocol.server_process(header) == protocol.__SA_CURRENT_SESSIONS:
+            elif protocol.server_process(header) == protocol._SA_CURRENT_SESSIONS:
                 pickle_current_sessions = pickle.dumps(current_sessions)
                 sock.send(pickle_current_sessions)
                     
-            elif protocol.server_process(header) == protocol.__SA_UPDATE_GAME:
+            elif protocol.server_process(header) == protocol._SA_UPDATE_GAME:
                 current_sessions[0].update_game(header)
                 pickle_session = pickle.dumps(current_sessions[0])
                 sock.send(pickle_session)
                 
-            elif header == protocol.__TERMINATOR:
+            elif header == protocol._TERMINATOR:
                 break
                         
         except KeyboardInterrupt as e:
