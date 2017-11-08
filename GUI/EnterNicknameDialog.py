@@ -1,4 +1,4 @@
-import Tkinter
+from Tkinter import *
 import tkMessageBox
 
 
@@ -21,7 +21,6 @@ class EnterNicknameDialog:
 
     def confirm_nickname(self):
         name = self.enterNickname.get()
-        # TODO: Nickname has to be passed to the server
         if len(name) <= 8 and name.isalnum():
             self.nickname = name
             self.root.destroy()
@@ -33,4 +32,3 @@ class EnterNicknameDialog:
         # at first clear entry
         self.enterNickname.delete(0, 'end')
         self.enterNickname.insert(0, self.listNicknames.get(ACTIVE))
-

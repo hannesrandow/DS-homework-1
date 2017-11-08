@@ -3,6 +3,8 @@ from os import getpid
 import protocol
 from time import sleep
 import pickle
+from GUI.EnterNicknameDialog import *
+from GUI.Gameplay import *
 
 HOST = '127.0.0.1'
 PORT = 7789
@@ -99,7 +101,7 @@ if __name__ == '__main__':
         print "in while"
         user_action = raw_input('enter action preceded by -flag: ')
         try:
-            print "in try"
+            gameplayGUI = None
             if user_action.startswith('-username'):
                 nickname(user_action.split(' ')[1])
                 print 'username created'
@@ -113,6 +115,8 @@ if __name__ == '__main__':
                     print i
             elif user_action.startswith('-getsessions'):
                 get_current_sessions()
+            elif user_action.startswith('-startSession'):
+                gameplayGUI = Gameplay(current_session)
             elif user_action.startswith('-update'):
                 current_session = update(user_action, current_session)
             elif user_action.startswith('-solution'):
@@ -128,5 +132,3 @@ if __name__ == '__main__':
                 
         except KeyboardInterrupt as e:
             break
-    
-    

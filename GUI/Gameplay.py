@@ -7,10 +7,11 @@ WIDTH_ENTRIES = 1
 CELL = (LENGTH - 2 * MARGIN) / 9
 
 class Gameplay:
-    def __init__(self):
+    def __init__(self, current_session):
         self.root = Tk()
         self.row = 0
         self.col = 0
+        self.current_session = current_session
         self.canvasSudoku = Canvas(self.root, width=LENGTH, height=LENGTH)
         self.canvasSudoku.grid(row=0)
         self.canvasSudoku.bind("<Button-1>", self.cell_clicked)
@@ -22,12 +23,13 @@ class Gameplay:
         self.titleScore = Label(self.frameScoreInput, text="Scores:", font="Arial 12 bold")
         self.titleScore.pack()
         # TODO: receive names and scores from server
-        scores = [("Me", 10), ("alpha", 5), ("beta", 7)]
         # list for updating the scores
-        self.lblScores = []
-        for score in scores:
-            self.lblScore = Label(self.frameScoreInput, text=score[0] + ": " + str(score[1]))
-            self.lblScores.append(self.lblScore)
+        self.varScores = []
+        for player in self.current_session.current_players:
+            self.varScore = StringVar()
+            self.lblScore = Label(self.frameScoreInput, textvariable=self.varScore)
+            self.varScore.set(player.nickname + ": " + str(player.score))
+            self.varScores.append(self.varScore)
             self.lblScore.pack()
 
         '''
@@ -90,7 +92,7 @@ class Gameplay:
     def draw_grid(self):
         for i in range(10):
             # blue lines for 3x3 fields
-            color = "blue" if i%3 == 0 else "gray"
+            color = "blue" if i % 3 == 0 else "gray"
             x0 = MARGIN
             x1 = LENGTH - MARGIN
             y = MARGIN + i * CELL
@@ -105,10 +107,10 @@ class Gameplay:
             for j in range(9):
                 x = MARGIN + j * CELL + CELL / 2
                 y = MARGIN + i * CELL + CELL / 2
-                # TODO: values from CSV / Game class
-                cellValue = "1"
+                cellValue = str(self.current_session.game_state[i][j])
                 color = "black"
-                self.canvasSudoku.create_text(x, y, text=cellValue, font="Arial 12", tags="numbers", fill=color)
+                if self.current_session.game_state[i][j] != 0:
+                    self.canvasSudoku.create_text(x, y, text=cellValue, font="Arial 12", tags="numbers", fill=color)
 
     def cell_clicked(self, event):
         x, y = event.x, event.y
@@ -118,7 +120,7 @@ class Gameplay:
         # deselect cell if it was already selected
         if (row, col) == (self.row, self.col):
             self.row, self.col = -1, -1
-        else: # TODO: if game[row][col] == 0 (empty)
+        elif self.current_session.game_state[row][col] == 0:
             self.row, self.col = row, col
         self.draw_cursor()
 
@@ -133,10 +135,11 @@ class Gameplay:
 
     def key_pressed(self, event):
         if self.row >= 0 and self.col >= 0 and event.char in "1234567890":
-            # TODO: self.game.puzzle[self.row][self.col] = int(event.char)
+            self.current_session.game_state[self.row][self.col] = int(event.char)
             self.col, self.row = -1, -1
             self.draw_numbers()
             self.draw_cursor()
 
-
-Gameplay()
+    def update_scores(self):
+        for idx, player in enumerate(self.current_session.current_players):
+            self.varScores[idx].set(player.nickname + ": " + str(player.score))
