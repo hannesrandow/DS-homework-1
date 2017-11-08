@@ -103,7 +103,9 @@ if __name__ == '__main__':
         try:
             gameplayGUI = None
             if user_action.startswith('-username'):
-                nickname(user_action.split(' ')[1])
+                e = EnterNicknameDialog()
+                nickname(e.nickname)
+                # nickname(user_action.split(' ')[1])
                 print 'username created'
             elif user_action.startswith('-newsession'):
                 #current_session = create_session('test_game', '5')
@@ -116,9 +118,11 @@ if __name__ == '__main__':
             elif user_action.startswith('-getsessions'):
                 get_current_sessions()
             elif user_action.startswith('-startSession'):
+                # TODO: client as a class or creating a thread for the GUI for updating
                 gameplayGUI = Gameplay(current_session)
             elif user_action.startswith('-update'):
                 current_session = update(user_action, current_session)
+                # TODO: gameplayGUI.update(current_session)
             elif user_action.startswith('-solution'):
                 inf = user_action.split(' ')
             elif user_action.startswith('-join'):

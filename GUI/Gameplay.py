@@ -7,7 +7,8 @@ WIDTH_ENTRIES = 1
 CELL = (LENGTH - 2 * MARGIN) / 9
 
 class Gameplay:
-    def __init__(self, current_session):
+    def __init__(self, current_session, client):
+        self.client = client
         self.root = Tk()
         self.row = 0
         self.col = 0
@@ -22,7 +23,6 @@ class Gameplay:
         self.frameScoreInput.grid(row=0, column=1, padx=10, pady=10)
         self.titleScore = Label(self.frameScoreInput, text="Scores:", font="Arial 12 bold")
         self.titleScore.pack()
-        # TODO: receive names and scores from server
         # list for updating the scores
         self.varScores = []
         for player in self.current_session.current_players:
@@ -133,8 +133,13 @@ class Gameplay:
             y1 = MARGIN + (self.row + 1) * CELL - 1
             self.canvasSudoku.create_rectangle(x0, y0, x1, y1, outline="red", tags="cursor")
 
+    # TODO: somehow make guessing possible
+    def guess_input(self, value):
+        self.client.update(self.row, self.col, value, self.current_session)
+
     def key_pressed(self, event):
         if self.row >= 0 and self.col >= 0 and event.char in "1234567890":
+            # TODO: self.guess_input(event.char)
             self.current_session.game_state[self.row][self.col] = int(event.char)
             self.col, self.row = -1, -1
             self.draw_numbers()
@@ -143,3 +148,9 @@ class Gameplay:
     def update_scores(self):
         for idx, player in enumerate(self.current_session.current_players):
             self.varScores[idx].set(player.nickname + ": " + str(player.score))
+
+    # TODO: public method to be called from outside to refresh the GUI with updates
+    def update(self, updated_session):
+        self.current_session = updated_session
+        self.draw_numbers()
+        self.update_scores()
