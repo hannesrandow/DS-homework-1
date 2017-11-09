@@ -1,14 +1,15 @@
 from Tkinter import *
 import tkMessageBox
 
+
 LENGTH = 470
 MARGIN = 10
 WIDTH_ENTRIES = 1
 CELL = (LENGTH - 2 * MARGIN) / 9
 
 class Gameplay:
-    def __init__(self, current_session):
-        # self.client = client
+    def __init__(self, current_session, client):
+        self.client = client
         self.root = Tk()
         self.row = 0
         self.col = 0
@@ -133,24 +134,24 @@ class Gameplay:
             y1 = MARGIN + (self.row + 1) * CELL - 1
             self.canvasSudoku.create_rectangle(x0, y0, x1, y1, outline="red", tags="cursor")
 
-    # TODO: somehow make guessing possible
-    def guess_input(self, value):
-        self.client.update(self.row, self.col, value, self.current_session)
-
+    # calls client's update method to send wished change to server
     def key_pressed(self, event):
-        if self.row >= 0 and self.col >= 0 and event.char in "1234567890":
-            # TODO: self.guess_input(event.char)
-            self.current_session.game_state[self.row][self.col] = int(event.char)
-            self.col, self.row = -1, -1
-            self.draw_numbers()
-            self.draw_cursor()
+        if self.row >= 0 and self.col >= 0 and event.char in "123456789":  # and event.char not in [37, 38, 39, 40]:
+            # to be sure that it is a number (not an arrow key or sth similar)
+            try:
+                int(event.char)
+                self.client.update(self, self.row, self.col, event.char, self.current_session)
+            except:
+                return
+            # self.current_session.game_state[self.row][self.col] = int(event.char)
 
     def update_scores(self):
         for idx, player in enumerate(self.current_session.current_players):
             self.varScores[idx].set(player.nickname + ": " + str(player.score))
 
-    # TODO: public method to be called from outside to refresh the GUI with updates
+    # 'public' method to be called from outside to refresh the GUI with updates
     def update(self, updated_session):
         self.current_session = updated_session
         self.draw_numbers()
         self.update_scores()
+

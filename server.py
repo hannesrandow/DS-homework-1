@@ -87,6 +87,7 @@ def client_thread(sock, addr):
                 sock.send(pickle_current_sessions)
                     
             elif protocol.server_process(header) == protocol._SA_UPDATE_GAME:
+                # TODO: update Score - player.updateScore(header_part2)
                 current_sessions[0].update_game(header)
                 pickle_session = pickle.dumps(current_sessions[0])
                 sock.send(pickle_session)

@@ -27,8 +27,22 @@ class Client:
         else:
             return pickle.loads(rsp)
 
+    def update(self, gui, row, col, value, session):
+        # TODO: send the information of the to changing session (which session)
+        update_request = self.send_request(protocol._REQ_UPDATE_GAME + protocol._MSG_FIELD_SEP +
+                                           str(row) + protocol._MSG_FIELD_SEP + str(col) + protocol._MSG_FIELD_SEP + str(value))
+        if update_request.game_state != session.game_state:
+            # to deselect in the gui (removing the cursor)
+            gui.row, gui.col = -1, -1
+            # TODO: update score +1
+            print 'correct'
+        else:
+            # TODO: update score -1
+            print 'incorrect'
 
+        gui.update(update_request)
 
+    '''
     def update(self, user_action, current_session):
         user_action = user_action.split(' ')
         row = user_action[1]
@@ -44,7 +58,7 @@ class Client:
             print 'incorrect'
 
         return update_request
-
+    '''
 
     def create_session(self, game_name, max_num_players):
         new_session = self.send_request(protocol._REQ_CREATE_SESSION + protocol._MSG_FIELD_SEP +
@@ -98,43 +112,10 @@ if __name__ == '__main__':
     socket = socket(AF_INET, SOCK_STREAM)
     socket.connect((HOST, PORT))
     client.connect()
-    while True:
-        sleep(1)
-        print "in while"
-        user_action = raw_input('enter action preceded by -flag: ')
-        try:
-            gameplayGUI = None
-            if user_action.startswith('-username'):
-                e = EnterNicknameDialog()
-                client.nickname(e.nickname)
-                # nickname(user_action.split(' ')[1])
-                print 'username created'
-            elif user_action.startswith('-newsession'):
-                #current_session = create_session('test_game', '5')
-                user_input = user_action.split(' ')
-                current_session = client.create_session(user_input[1], user_input[2])
-                print 'new session created'
-            elif user_action.startswith('-printsession'):
-                for i in current_session.game_state:
-                    print i
-            elif user_action.startswith('-getsessions'):
-                client.get_current_sessions()
-            elif user_action.startswith('-startSession'):
-                # TODO: client as a class or creating a thread for the GUI for updating
-                gameplayGUI = Gameplay(current_session)
-            elif user_action.startswith('-update'):
-                current_session = client.update(user_action, current_session)
-                # TODO: gameplayGUI.update(current_session)
-            elif user_action.startswith('-solution'):
-                inf = user_action.split(' ')
-            elif user_action.startswith('-join'):
-                rsp = client.join_session(user_action)
-                if type(rsp) == str:
-                    print rsp
-                else:
-                    current_session = rsp
-            elif user_action.startswith(protocol._TERMINATOR):
-                client.send_request(protocol._TERMINATOR)
-                
-        except KeyboardInterrupt as e:
-            break
+
+    e = EnterNicknameDialog()
+    client.nickname(e.nickname)
+    # TODO: use Enter Address Dialog to get the server address
+    # TODO: use Multiplayer Game Dialog to join existing session or create a new one
+    current_session = client.create_session("hi", "1")
+    gameplayGUI = Gameplay(current_session, client)
