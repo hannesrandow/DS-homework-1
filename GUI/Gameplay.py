@@ -62,9 +62,12 @@ class Gameplay:
         self.btnLeaveSession = Button(self.frameScoreInput, text="Leave Game", width=20, command=self.leave_session)
         self.btnLeaveSession.pack(pady=100)
         self.root.mainloop()
+
+        # TODO: pronounce the winner of the session
         tkMessageBox.showinfo("Game finished", "Winner is: ")
 
     def leave_session(self):
+        # TODO: self.client.leave_session()
         self.root.destroy()
 
     '''
@@ -152,6 +155,9 @@ class Gameplay:
     # 'public' method to be called from outside to refresh the GUI with updates
     def update(self, updated_session):
         self.current_session = updated_session
+        # TODO: leave the game after sudoku is completely solved
+        if self.current_session.game_state == self.current_session.game_solution:
+            self.leave_session()
         self.draw_numbers()
         self.update_scores()
 
