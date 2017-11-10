@@ -1,13 +1,13 @@
-from socket import AF_INET, SOCK_STREAM, socket
-from os import getpid
-import protocol
-from time import sleep
 import pickle
-from GUI.EnterNicknameDialog import *
-from GUI.Gameplay import *
+from socket import AF_INET, SOCK_STREAM, socket
+
+from sudoku.GUI.Gameplay import *
+
+from sudoku.GUI.EnterNicknameDialog import *
+from sudoku.common import protocol
 
 HOST = '127.0.0.1'
-PORT = 7789
+PORT = 7794
 
 class Client:
     def leave_session(self):

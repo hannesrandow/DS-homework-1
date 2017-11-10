@@ -1,8 +1,6 @@
-import abc
 import csv
 import os
-import protocol
-#from server import Session
+
 
 class Session(object):
     
@@ -12,13 +10,11 @@ class Session(object):
         self.game_name = game_name
         self.new_game_path = new_game_path
         self.game_solution_path = game_solution_path
-        self.max_num_of_players = max_num_of_players
+        self.max_num_of_players = int(max_num_of_players)
         self.current_players = current_players
         self.game_state = []
         self.game_solution = []
         
-      
-    
     def read_game(self, path):
         """        
         read sudoko game from csv file
@@ -34,8 +30,6 @@ class Session(object):
                 
         return game
     
-    
-
     def update_game(self, information):
         
         information = information.split(':')
@@ -47,17 +41,19 @@ class Session(object):
             if self.game_solution[row][column] == number:
                 self.game_state[row][column] = number
 
-    
     def game_start(self):
         self.game_state = self.read_game(self.new_game_path)
         self.game_solution = self.read_game(self.game_solution_path)
-    
 
     def game_finish():
         pass
 
     def terminate_session():
         pass
-    
 
-                
+    def add_player(self, player):
+        was_successful = False
+        if self.max_num_of_players - len(self.current_players) > 0:
+            self.current_players.append(player)
+            was_successful = True
+        return was_successful

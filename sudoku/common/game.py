@@ -1,6 +1,6 @@
-import abc
 import csv
 import os
+
 
 class Game(object):
     
@@ -14,9 +14,7 @@ class Game(object):
         self.current_players = current_players
         self.game_state = []
         self.game_solution = []
-        
-      
-    
+
     def read_game(self, path):
         """        
         read sudoko game from csv file
@@ -29,25 +27,17 @@ class Game(object):
             for row in read_sudoku:
                 row = [int(x) for x in row]
                 game.append(row)
-                
         return game
-    
-    
 
     def update_game():
         pass
 
-    
     def game_start(self):
         self.game_state = self.read_game(self.new_game_path)
         self.game_solution = self.read_game(self.game_solution_path)
-    
 
     def game_finish():
         pass
 
     def terminate_session():
         pass
-    
-
-                

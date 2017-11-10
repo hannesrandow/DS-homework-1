@@ -1,6 +1,3 @@
-import abc
-from session import Session
-
 class ClientSession(Client):
 
     def __init(self, game_state, game_id, game_name, game_solution, maximum_num_of_players, score):

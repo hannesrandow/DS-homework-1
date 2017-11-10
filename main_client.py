@@ -1,0 +1,1 @@
+# TODO: the main script to run client in different modes and preparing environment
