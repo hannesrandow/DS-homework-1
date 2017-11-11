@@ -44,8 +44,8 @@ class GamesHandler:
         #     return None # TODO: be more informative to client
 
         session = Session('running', 1, game_name,
-                          '../puzzles/sudoku_easy_1.csv',
-                          '../puzzles/sudoku_easy_1_solution.csv',
+                          'sudoku/puzzles/sudoku_easy_1.csv',
+                          'sudoku/puzzles/sudoku_easy_1_solution.csv',
                           max_num_of_players,
                           [current_player])
         session.game_start()
@@ -167,7 +167,7 @@ def handle_link_backs(games):
         # TODO: send fail or success
 
 
-if __name__ == '__main__':
+def server_main(args=None):
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((HOST, PORT))
@@ -197,4 +197,5 @@ if __name__ == '__main__':
     server_socket.close()
 
 
-
+if __name__ == '__main__':
+    server_main()

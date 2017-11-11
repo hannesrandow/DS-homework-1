@@ -1,25 +1,24 @@
 import pickle
 from socket import AF_INET, SOCK_STREAM, socket
-
 from sudoku.GUI.Gameplay import *
-
 from sudoku.GUI.EnterNicknameDialog import *
 from sudoku.common import protocol
 
 HOST = '127.0.0.1'
 PORT = 7794
 
-class Client:
+
+class ClientGUI:
+    def __init__(self):
+        self.sock = socket(AF_INET, SOCK_STREAM)
+        self.sock.connect((HOST, PORT))
+
     def leave_session(self):
         pass
 
-
-
-
-
     def send_request(self, m):
-        socket.sendall(m)
-        rsp = socket.recv(10000)
+        self.sock.sendall(m)
+        rsp = self.sock.recv(10000)
         if rsp == protocol._ACK:
             return True
         elif rsp == protocol._RSP_SESSION_FULL:
@@ -66,7 +65,6 @@ class Client:
 
         return new_session
 
-
     def get_current_sessions(self):
         current_sessions = self.send_request(protocol._REQ_CURRENT_SESSIONS)
         print 'Currently availabel sessions are: '
@@ -78,14 +76,9 @@ class Client:
             print session.max_num_of_players
             print '------------------ SESSION ---------------------'
 
-
-
-
-
     def nickname(self, n):
         self.send_request(protocol._REQ_NICKNAME + protocol._MSG_FIELD_SEP + n)
         return
-
 
     def connect(self):
         self.send_request(protocol._REQ_INITIAL_CONNECT)
@@ -99,18 +92,12 @@ class Client:
         else:
             return 'session full'
 
-
-
-
-
     def process_response(self, m):
         pass
 
-if __name__ == '__main__':
 
-    client = Client()
-    socket = socket(AF_INET, SOCK_STREAM)
-    socket.connect((HOST, PORT))
+def client_gui_main(args=None):
+    client = ClientGUI()
     client.connect()
 
     e = EnterNicknameDialog()
@@ -119,3 +106,7 @@ if __name__ == '__main__':
     # TODO: use Multiplayer Game Dialog to join existing session or create a new one
     current_session = client.create_session("hi", "1")
     gameplayGUI = Gameplay(current_session, client)
+
+
+if __name__ == '__main__':
+    client_gui_main()
