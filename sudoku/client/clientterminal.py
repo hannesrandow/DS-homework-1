@@ -9,7 +9,7 @@ HOST = '127.0.0.1'
 PORT = 7794
 
 
-class Client_Terminal:
+class ClientTerminal:
     def __init__(self):
         self.gameUpdateLink = GameUpdateLink()
         self.socket = socket(AF_INET, SOCK_STREAM)
@@ -129,8 +129,9 @@ class Client_Terminal:
         self.gameUpdateLink.destroy()
         self.socket.close()
 
-if __name__ == '__main__':
-    client = Client_Terminal()
+
+def client_terminal_main(args=None):
+    client = ClientTerminal()
     client.connect()
 
     while True:
@@ -141,3 +142,7 @@ if __name__ == '__main__':
             client.stop()
             print("terminated!")
             exit(-1)
+
+
+if __name__ == '__main__':
+    client_terminal_main()
