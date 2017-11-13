@@ -26,6 +26,6 @@ class Player(object):
             # print ("send update to ", self.nickname)
             self.link_back_sock.send(pickle_session)
 
-    def delete(self):
+    def close(self):
         if self.link_back_sock:
             self.link_back_sock.close()
