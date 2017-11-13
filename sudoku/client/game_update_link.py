@@ -14,6 +14,7 @@ class GameUpdateLink:
 
     def game_updates_thread(self, player_id):
         # game updates (gu) socket
+        # TODO: a timeout!!
         print("waiting for the link back connection..")
         self.__gu_sock.connect((HOST, GAME_UPDATE_PORT))
         self.__gu_sock.send(player_id)

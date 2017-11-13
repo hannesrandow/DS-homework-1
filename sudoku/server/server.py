@@ -56,12 +56,19 @@ class GamesHandler:
         return session
 
     def join_session(self, information, player):
-        req_ses_id = int(information.split(protocol._MSG_FIELD_SEP)[1])
+        try: # if input of int() is not convertible to integer it throws an error
+            req_ses_id = int(information.split(protocol._MSG_FIELD_SEP)[1])
+        except ValueError:
+            print("session id is not int convertible: %s" % information.split(protocol._MSG_FIELD_SEP))
+            return # TODO: appropriate error to user
+
         for session in self.current_sessions:
             if session.game_id == req_ses_id:
                 break
         self.__lock.acquire()
         joined_session = session.add_player(player)
+        # TODO: some mysterious behavior observed here. couldn't reproduce it [Novin]
+        print("player added to current session!")
         self.__lock.release()
         if joined_session:
             return session
