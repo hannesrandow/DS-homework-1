@@ -11,6 +11,7 @@ class GameUpdateLink:
     def __init__(self):
         self.__gu_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__thread = None
+        self.__shouldRunning = True
 
     def game_updates_thread(self, player_id):
         # game updates (gu) socket
@@ -18,7 +19,7 @@ class GameUpdateLink:
         print("waiting for the link back connection..")
         self.__gu_sock.connect((HOST, GAME_UPDATE_PORT))
         self.__gu_sock.send(player_id)
-        while True:
+        while self.__shouldRunning:
             try:
                 game_session = self.__gu_sock.recv(10000)
                 pickle.loads(game_session)
@@ -38,6 +39,7 @@ class GameUpdateLink:
 
     def destroy(self):
         if self.__thread:
+            self.__shouldRunning = False
             self.__thread.join()
             self.__thread = None
         self.__gu_sock.close()

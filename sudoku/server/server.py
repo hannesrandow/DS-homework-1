@@ -12,8 +12,8 @@ from sudoku.common.session import Session
 client_addr_sockets = []
 
 recv_buffer_length = 1024
-current_players = []
-
+current_players = []    # just for having a list of active players on server (no particular use!)
+shouldRunning = True    # a global variable for threads to know when to finish their loop
 
 class GamesHandler:
     """
@@ -97,12 +97,16 @@ class GamesHandler:
 def client_thread(sock, addr, games):
     print 'created new thread for client', addr
 
+    global shouldRunning
     player = None
     # TODO: maybe it's better to use a hash of clients IP:PORT for that!!
-    while True:
+    while shouldRunning:
         sleep(1)
         try:
             header = sock.recv(recv_buffer_length)
+            if header == 0:
+                print ("header 000000")
+                break
             if protocol.server_process(header) == protocol._SA_NEW_PLAYER:
                 player = Player(addr)
                 # players.add_player(id = hash(threading.current_thread()))
@@ -158,23 +162,37 @@ def client_thread(sock, addr, games):
 
             elif header == protocol._TERMINATOR:
                 break
+        except KeyboardInterrupt as e:
+            break
         except Exception as e:
             print(e)
             continue
-        except KeyboardInterrupt as e:
-            break
 
     # if reached here then connection had to be terminated
+    print("closing session for client", player.client_ip)
     sock.close()
-    player.delete()
+    print("socket closed")
+    player.close()
+    print("client link back closed")
+
+    if player:
+        session_current_players = games.get_session(player.current_session_id).current_players
+        session_current_players.remove(player)  # remove player from his session
+        current_players.remove(player)  # remove player from current_players list
+        print("current_players list being updated..")
+        player = None
+    else:
+        print("player object is none [weird!!]")
 
 
 def handle_link_backs(games):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind((HOST, GAME_UPDATE_PORT))
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+
     sock.listen(0)
-    while True:
+    while shouldRunning:
         client_sock, client_addr = sock.accept()
         player_id = client_sock.recv(1000)
 
@@ -191,6 +209,7 @@ def handle_link_backs(games):
         if not found:
             print("no player with id \"%s\" could be matched for link back!" % player_id)
         # TODO: send fail or success
+    print("link back checker on threading side got dismissed!!!")
 
 
 def server_main(args=None):
@@ -199,22 +218,24 @@ def server_main(args=None):
     server_socket.bind((HOST, PORT))
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     backlog = 0
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
     # server_socket.listen(backlog)
 
     games = GamesHandler()
-
+    global shouldRunning
     threads = []
     # handle links with thread
     t = threading.Thread(target=handle_link_backs, args=(games,)).start()
     threads.append(t)
 
     server_socket.listen(backlog)
-    while True:
+    while True:  # grand loop of the server
         try:
             client_socket, client_addr = server_socket.accept()
             t = threading.Thread(target=client_thread, args=(client_socket, client_addr, games)).start()
             threads.append(t)
         except KeyboardInterrupt as e:
+            shouldRunning = False
             break
 
     # clean-ups
