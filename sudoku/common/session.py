@@ -30,17 +30,31 @@ class Session(object):
                 
         return game
     
-    def update_game(self, information):
+    def update_game(self, information, player):
+        
+        def update_score(correct):
+            index_of_updating_player = self.current_players.index(player)
+            if correct:
+                self.current_players[index_of_updating_player].score += 1
+            else:
+                self.current_players[index_of_updating_player].score -= 1
         
         information = information.split(':')
         row = int(information[1])
         column = int(information[2])
         number = int(information[3])
         
+        correct = False
         if self.game_state[row][column] == 0:
             if self.game_solution[row][column] == number:
                 self.game_state[row][column] = number
-
+                correct = True
+        update_score(correct)
+        return correct
+        
+        
+        
+                
     def game_start(self):
         self.game_state = self.read_game(self.new_game_path)
         self.game_solution = self.read_game(self.game_solution_path)

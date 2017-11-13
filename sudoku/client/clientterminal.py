@@ -40,12 +40,13 @@ class ClientTerminal:
                                            row + protocol._MSG_FIELD_SEP + column + protocol._MSG_FIELD_SEP + number)
 
         # print update_request
-        if update_request.game_state != current_session.game_state:
+        #if update_request.game_state != current_session.game_state:
+        if update_request[1]:
             print 'correct'
         else:
             print 'incorrect'
 
-        return update_request
+        return update_request[0]
 
     def create_session(self, game_name, max_num_players):
         new_session = self.send_request(protocol._REQ_CREATE_SESSION + protocol._MSG_FIELD_SEP +
@@ -84,6 +85,15 @@ class ClientTerminal:
 
     def process_response(m):
         pass
+    
+    def find_self(self):
+        """
+        Find the representation of the client in current players of the session.
+        E.g. to get score
+        """
+        for p in self.current_session.current_players:
+            if p.client_ip == self.socket.getsockname():
+                return p
 
     def run(self):
         print "client running.."
@@ -100,7 +110,8 @@ class ClientTerminal:
             self.gameUpdateLink.create(self.client_specifier)
             # print 'new session created'
         elif user_action.startswith('-printsession'):
-            if not self.current_session:
+            #if not self.current_session:
+            if self.current_session:
                 for i in self.current_session.game_state:
                     print i
             else:
@@ -121,6 +132,15 @@ class ClientTerminal:
             else:
                 self.current_session = rsp
             # print "in the join: ", current_session
+        elif user_action.startswith('-score'):
+            #score = self.current_session.current_players[0].score
+            if self.current_session:
+                score = self.find_self().score
+                print 'my score is: ', score
+            else: 
+                print "currenty not in a session"
+        elif user_action.startswith('-sn'):
+            print self.socket.getsockname()
         elif user_action.startswith(protocol._TERMINATOR):
             self.send_request(protocol._TERMINATOR)
 
