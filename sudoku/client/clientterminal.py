@@ -97,7 +97,6 @@ class ClientTerminal:
             # current_session = create_session('test_game', '5')
             user_input = user_action.split(' ')
             self.current_session = self.create_session(user_input[1], user_input[2])
-            print "in the newsession: ", self.current_session
             self.gameUpdateLink.create(self.client_specifier)
             # print 'new session created'
         elif user_action.startswith('-printsession'):
