@@ -143,8 +143,6 @@ def client_thread(sock, addr, games):
                     print("error: no session with id %d found!" % s)
                     continue
 
-                print my_session.game_state
-
                 pickle_session = pickle.dumps(my_session)
                 sock.send(pickle_session)
                 # send to other players of the same session
