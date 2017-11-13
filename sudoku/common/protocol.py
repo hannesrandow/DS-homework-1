@@ -1,4 +1,6 @@
-GAME_UPDATE_PORT = 7025
+GAME_UPDATE_PORT = 7026
+HOST = '127.0.0.1'
+PORT = 7795
 
 # acknowledgement
 _ACK = 'ACK'
