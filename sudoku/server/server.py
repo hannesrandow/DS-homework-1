@@ -6,12 +6,10 @@ from time import sleep
 from sudoku.common.protocol import GAME_UPDATE_PORT
 from sudoku.server.player import Player
 from sudoku.common import protocol
+from sudoku.common.protocol import HOST, PORT
 from sudoku.common.session import Session
 
 client_addr_sockets = []
-
-HOST = '127.0.0.1'
-PORT = 7794
 
 recv_buffer_length = 1024
 current_players = []
@@ -43,7 +41,9 @@ class GamesHandler:
         # if max_num_of_players < 1 or max_num_of_players > 100:
         #     return None # TODO: be more informative to client
 
-        session = Session('running', 1, game_name,
+        s_id = len(self.current_sessions ) + 1
+        current_player.current_session_id = s_id
+        session = Session('running', s_id, game_name,
                           'sudoku/puzzles/sudoku_easy_1.csv',
                           'sudoku/puzzles/sudoku_easy_1_solution.csv',
                           max_num_of_players,
@@ -66,6 +66,7 @@ class GamesHandler:
             if session.game_id == req_ses_id:
                 break
         self.__lock.acquire()
+        player.current_session_id = session.game_id
         joined_session = session.add_player(player)
         # TODO: some mysterious behavior observed here. couldn't reproduce it [Novin]
         print("player added to current session!")
@@ -76,7 +77,12 @@ class GamesHandler:
             return None
 
     def get_session(self, id):
-        return self.current_sessions[id]
+        target_session = None
+        for s in self.current_sessions:
+            if s.game_id == id:
+                target_session = s
+        return target_session
+        # return self.current_sessions[id]
 
     def get_sessions(self):
         return self.current_sessions
@@ -128,20 +134,32 @@ def client_thread(sock, addr, games):
             elif protocol.server_process(header) == protocol._SA_UPDATE_GAME:
                 # TODO: update Score - player.updateScore(header_part2)
                 # TODO: give in the game_id
-                games.get_session(0).update_game(header)
+                s = player.current_session_id
+                my_session = games.get_session(s)
 
-                pickle_session = pickle.dumps(games.get_session(0))
+                if my_session:
+                    my_session.update_game(header)
+                else:
+                    print("error: no session with id %d found!" % s)
+                    continue
+
+                print my_session.game_state
+
+                pickle_session = pickle.dumps(my_session)
                 sock.send(pickle_session)
                 # send to other players of the same session
-                for other_player in games.get_session(0).current_players:
+                for other_player in my_session.current_players:
                     # TODO: exlude the current player that upated the game!
-                    other_player.send_game_updates(games.get_session(0))
+                    # if other_player != player:
+                    other_player.send_game_updates(my_session)
                     print "game updates sent to ", other_player.nickname
 
 
             elif header == protocol._TERMINATOR:
                 break
-
+        except Exception as e:
+            print(e)
+            continue
         except KeyboardInterrupt as e:
             break
 

@@ -3,9 +3,7 @@ from socket import AF_INET, SOCK_STREAM, socket
 from sudoku.GUI.Gameplay import *
 from sudoku.GUI.EnterNicknameDialog import *
 from sudoku.common import protocol
-
-HOST = '127.0.0.1'
-PORT = 7794
+from sudoku.common.protocol import HOST, PORT
 
 
 class ClientGUI:

@@ -3,10 +3,8 @@ from socket import AF_INET, SOCK_STREAM, socket
 from time import sleep
 
 from sudoku.common import protocol
+from sudoku.common.protocol import HOST, PORT
 from sudoku.client.game_update_link import GameUpdateLink
-
-HOST = '127.0.0.1'
-PORT = 7794
 
 
 class ClientTerminal:
@@ -41,12 +39,11 @@ class ClientTerminal:
         update_request = self.send_request(protocol._REQ_UPDATE_GAME + protocol._MSG_FIELD_SEP +
                                            row + protocol._MSG_FIELD_SEP + column + protocol._MSG_FIELD_SEP + number)
 
+        # print update_request
         if update_request.game_state != current_session.game_state:
-            print
-            'correct'
+            print 'correct'
         else:
-            print
-            'incorrect'
+            print 'incorrect'
 
         return update_request
 
@@ -57,7 +54,7 @@ class ClientTerminal:
 
     def get_current_sessions(self):
         current_sessions = self.send_request(protocol._REQ_CURRENT_SESSIONS)
-        print 'Currently availabel sessions are: '
+        # print 'Currently availabel sessions are: '
         for session in current_sessions:
             print
             '------------------ SESSION ---------------------'
@@ -79,6 +76,7 @@ class ClientTerminal:
     def join_session(self, user_action):
         session_id = user_action.split(' ')[1]
         rsp = self.send_request(protocol._REQ_JOIN_SESSION + protocol._MSG_FIELD_SEP + session_id)
+        # print "---- rspns : ", rsp
         if type(rsp) != bool:
             return rsp
         else:
@@ -94,14 +92,14 @@ class ClientTerminal:
             nickname = user_action.split(' ')[1]
             self.client_specifier = nickname
             self.nickname(nickname)
-            print
-            'username created'
+            print 'username created'
         elif user_action.startswith('-newsession'):
             # current_session = create_session('test_game', '5')
             user_input = user_action.split(' ')
             self.current_session = self.create_session(user_input[1], user_input[2])
+            print "in the newsession: ", self.current_session
             self.gameUpdateLink.create(self.client_specifier)
-            print 'new session created'
+            # print 'new session created'
         elif user_action.startswith('-printsession'):
             if not self.current_session:
                 for i in self.current_session.game_state:
@@ -111,17 +109,19 @@ class ClientTerminal:
         elif user_action.startswith('-getsessions'):
             self.get_current_sessions()
         elif user_action.startswith('-update'):
-            current_session = self.update(user_action, self.current_session)
+            self.current_session = self.update(user_action, self.current_session)
         elif user_action.startswith('-solution'):
             inf = user_action.split(' ')
         elif user_action.startswith('-join'):
             rsp = self.join_session(user_action)
             self.gameUpdateLink.create(self.client_specifier)
+            # print "--- we're joined --- "
+            # print rsp
             if type(rsp) == str:
-                print
-                rsp
+                print 'incorrect response : ', rsp
             else:
-                current_session = rsp
+                self.current_session = rsp
+            # print "in the join: ", current_session
         elif user_action.startswith(protocol._TERMINATOR):
             self.send_request(protocol._TERMINATOR)
 
