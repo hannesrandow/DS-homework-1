@@ -2,6 +2,7 @@ import pickle
 from socket import AF_INET, SOCK_STREAM, socket
 from sudoku.GUI.Gameplay import *
 from sudoku.GUI.EnterNicknameDialog import *
+from sudoku.GUI.MultiplayerGameDialog import *
 from sudoku.common import protocol
 from sudoku.common.protocol import HOST, PORT
 
@@ -25,6 +26,7 @@ class ClientGUI:
             return pickle.loads(rsp)
 
     def update(self, gui, row, col, value, session):
+        print(session.game_id)
         # TODO: send the information of the to changing session (which session)
         update_request = self.send_request(protocol._REQ_UPDATE_GAME + protocol._MSG_FIELD_SEP +
                                            str(row) + protocol._MSG_FIELD_SEP + str(col) + protocol._MSG_FIELD_SEP + str(value))
@@ -65,14 +67,7 @@ class ClientGUI:
 
     def get_current_sessions(self):
         current_sessions = self.send_request(protocol._REQ_CURRENT_SESSIONS)
-        print 'Currently availabel sessions are: '
-        for session in current_sessions:
-            print '------------------ SESSION ---------------------'
-            print session.game_name
-            print session.game_id
-            print ' '.join([player.nickname for player in session.current_players])#session.current_players
-            print session.max_num_of_players
-            print '------------------ SESSION ---------------------'
+        return current_sessions
 
     def nickname(self, n):
         self.send_request(protocol._REQ_NICKNAME + protocol._MSG_FIELD_SEP + n)
@@ -101,8 +96,12 @@ def client_gui_main(args=None):
     e = EnterNicknameDialog()
     client.nickname(e.nickname)
     # TODO: use Enter Address Dialog to get the server address
-    # TODO: use Multiplayer Game Dialog to join existing session or create a new one
-    current_session = client.create_session("hi", "1")
+    # Done: use Multiplayer Game Dialog to join existing session or create a new one
+    m = MultiplayerGameDialog(client)
+    try:
+        current_session = client.create_session(m.name, m.number)
+    except:
+        current_session = client.create_session(m.currentSession.game_name, str(m.currentSession.max_num_of_players))
     gameplayGUI = Gameplay(current_session, client)
 
 

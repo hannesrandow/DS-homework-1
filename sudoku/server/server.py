@@ -132,6 +132,7 @@ def client_thread(sock, addr, games):
                 sock.send(pickle_current_sessions)
 
             elif protocol.server_process(header) == protocol._SA_UPDATE_GAME:
+                print(header)
                 # TODO: update Score - player.updateScore(header_part2)
                 # TODO: give in the game_id
                 s = player.current_session_id

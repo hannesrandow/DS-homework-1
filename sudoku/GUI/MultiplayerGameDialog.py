@@ -3,8 +3,9 @@ import tkMessageBox
 
 
 class MultiplayerGameDialog:
-    def __init__(self):
+    def __init__(self, client):
         self.root = Tk()
+        self.client = client
         self.lblName = Label(self.root, text="Name: ")
         self.lblName.grid(row=0)
         self.enterName = Entry(self.root)
@@ -18,16 +19,22 @@ class MultiplayerGameDialog:
         self.listSessions = Listbox(self.root)
         self.listSessions.bind("<Double-Button-1>", self.select_session_from_list_on_double_click)
         self.listSessions.grid(row=1, columnspan=4)
-        # TODO: request sessions from server
-        for item in ["session1", "session2"]:
-            self.listSessions.insert(END, item)
+        # Done: request sessions from server
+        self.currentSessions = self.get_current_sessions(self.client)
+        for item in self.currentSessions:
+            self.listSessions.insert(END, item.game_name)
         self.root.mainloop()
 
     def create_session(self):
-        name = self.enterName.get()
-        number = int(self.enterNumber.get())
-
-        pass
+        self.name = self.enterName.get()
+        self.number = self.enterNumber.get()
+        self.root.destroy()
 
     def select_session_from_list_on_double_click(self, event):
-        pass
+        index = event.widget.curselection()[0]
+        self.currentSession = self.currentSessions[index]
+        self.root.destroy()
+
+
+    def get_current_sessions(self,client):
+        return client.get_current_sessions()
