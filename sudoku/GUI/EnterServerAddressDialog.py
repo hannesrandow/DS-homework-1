@@ -5,6 +5,7 @@ import re
 class EnterServerAddressDialog:
     def __init__(self):
         self.root = Tk()
+        self.address = ""
         self.lblAddress = Label(self.root, text="Please enter the address of the server: ")
         self.lblAddress.pack(side=LEFT)
         self.entryAddress = Entry(self.root)
@@ -17,6 +18,7 @@ class EnterServerAddressDialog:
         address = self.entryAddress.get()
         r = re.compile("\d*\.\d*\.\d*\.\d*")
         if r.match(address) is not None:
+            self.address = address
             self.root.destroy()
         else:
             tkMessageBox.showinfo("Wrong Input", "You have to enter a server address like 168.0.0.1")

@@ -31,6 +31,10 @@ _SA_CURRENT_SESSIONS = 'sa4'
 _SA_UPDATE_GAME = 'sa5'
 _SA_JOIN_SESSION = 'sa6'
 
+# session status
+_PENDING = 'ss0'
+_READY = 'ss1'
+
 # field separator for sending multiple values ---------------------------------
 _MSG_FIELD_SEP = ':'
 
