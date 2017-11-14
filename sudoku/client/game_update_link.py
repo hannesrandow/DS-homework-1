@@ -54,6 +54,7 @@ class GameUpdateLink:
     def destroy(self):
         if self.threaddd:
             self.__shouldRunning = False
+            # FIXME: thread is not being closed correctly! something sucks about socket
             self.threaddd.join()
             self.threaddd = None
         self.__gu_sock.shutdown(2)

@@ -218,14 +218,24 @@ def client_thread(sock, addr, games):
     player.close()
     print("client link back closed")
 
+    # update list of players
     if player and player.current_session_id:
-        session_current_players = games.get_session(player.current_session_id).current_players
-        session_current_players.remove(player)  # remove player from his session
+        current_game = games.get_session(player.current_session_id)
+        current_game.current_players.remove(player)  # remove player from his session
+        # check on the status of the game if only one player is left -> game completed
+        if len(current_game.current_players) == 1:
+            current_game.game_status = protocol._COMPLETED
+            for other_player in current_game.current_players:
+                other_player.send_game_updates(current_game)
+                print "only one player left -> game ends for : ", other_player.nickname
+
         current_players.remove(player)  # remove player from current_players list
         print("current_players list being updated..")
         player = None
     else:
         print("player object is none [weird!!]")
+
+
 
 
 def handle_link_backs(games):
