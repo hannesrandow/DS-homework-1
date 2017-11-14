@@ -34,7 +34,7 @@ class MultiplayerGameDialog:
 
     def select_session_from_list_on_double_click(self, event):
         index = event.widget.curselection()[0]
-        self.currentSession = self.currentSessions[index]
+        self.currentSession = self.currentSessions[int(index)]
         rsp = self.client.join_session(self.currentSession.game_id)
         if type(rsp) == str:
             tkMessageBox.showinfo('Session is full!', 'Oops.. people already having fun on this session. try another!')
