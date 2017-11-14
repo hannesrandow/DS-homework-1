@@ -5,12 +5,15 @@ from sudoku.GUI.EnterNicknameDialog import *
 from sudoku.GUI.MultiplayerGameDialog import *
 from sudoku.common import protocol
 from sudoku.common.protocol import HOST, PORT
+from sudoku.client.game_update_link import GameUpdateLink
+
 
 
 class ClientGUI:
     def __init__(self):
         self.sock = socket(AF_INET, SOCK_STREAM)
         self.sock.connect((HOST, PORT))
+        self.gameplayGUI = None
 
     def leave_session(self):
         pass
@@ -26,7 +29,7 @@ class ClientGUI:
             return pickle.loads(rsp)
 
     def update(self, gui, row, col, value, session):
-        print(session.game_id)
+        #print(session.game_id)
         # TODO: send the information of the to changing session (which session)
         update_request = self.send_request(protocol._REQ_UPDATE_GAME + protocol._MSG_FIELD_SEP +
                                            str(row) + protocol._MSG_FIELD_SEP + str(col) + protocol._MSG_FIELD_SEP + str(value))
@@ -63,6 +66,9 @@ class ClientGUI:
     def create_session(self, game_name, max_num_players):
         new_session = self.send_request(protocol._REQ_CREATE_SESSION + protocol._MSG_FIELD_SEP +
                                         game_name + protocol._MSG_FIELD_SEP + max_num_players)
+        if self.gameplayGUI:
+            self.gameUpdateLink = GameUpdateLink(self.gameUpdateLink)
+            self.gameUpdateLink.create(self.nickname)
 
         return new_session
 
@@ -72,6 +78,7 @@ class ClientGUI:
 
     def nickname(self, n):
         self.send_request(protocol._REQ_NICKNAME + protocol._MSG_FIELD_SEP + n)
+        self.nickname = n
         return
 
     def connect(self):
@@ -82,6 +89,9 @@ class ClientGUI:
         session_id = user_action.split(' ')[1]
         rsp = self.send_request(protocol._REQ_JOIN_SESSION + protocol._MSG_FIELD_SEP + session_id)
         if type(rsp) != bool:
+            if self.gameplayGUI:
+                self.gameUpdateLink = GameUpdateLink(self.gameUpdateLink)
+                self.gameUpdateLink.create(self.nickname)
             return rsp
         else:
             return 'session full'
@@ -104,7 +114,7 @@ def client_gui_main(args=None):
     except:
         current_session = client.create_session(m.currentSession.game_name, str(m.currentSession.max_num_of_players))
     gameplayGUI = Gameplay(current_session, client)
-
+    client.gameplayGUI = gameplayGUI
 
 if __name__ == '__main__':
     client_gui_main()

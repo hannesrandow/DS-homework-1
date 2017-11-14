@@ -8,10 +8,11 @@ HOST = '127.0.0.1'
 
 class GameUpdateLink:
     """A class to handle update received from server to the client"""
-    def __init__(self):
+    def __init__(self, gui):
         self.__gu_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__thread = None
         self.__shouldRunning = True
+        self.gui = gui
 
     def game_updates_thread(self, player_id):
         # game updates (gu) socket
@@ -22,7 +23,8 @@ class GameUpdateLink:
         while self.__shouldRunning:
             try:
                 game_session = self.__gu_sock.recv(10000)
-                pickle.loads(game_session)
+                latest_game = pickle.loads(game_session)
+                self.gui.update(latest_game)
                 print("received a game update from server!")
             except:
                 continue
