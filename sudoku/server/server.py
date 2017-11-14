@@ -195,10 +195,9 @@ def client_thread(sock, addr, games):
                 sock.send(pickle_session)
                 # send to other players of the same session
                 for other_player in my_session.current_players:
-                    # TODO: exlude the current player that upated the game!
-                    # if other_player != player:
-                    other_player.send_game_updates(my_session)
-                    print "[based a game update rqst] game updates sent to ", other_player.nickname
+                    if other_player != player:
+                        other_player.send_game_updates(my_session)
+                        print "[based a game update rqst] game updates sent to ", other_player.nickname
 
 
             elif header == protocol._TERMINATOR:
