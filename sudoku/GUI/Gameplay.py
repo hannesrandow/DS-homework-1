@@ -1,6 +1,7 @@
 from Tkinter import *
 import tkMessageBox
-
+import time
+import sudoku.common.protocol as protocol
 from sudoku.client.game_update_link import GameUpdateLink
 
 LENGTH = 470
@@ -27,8 +28,12 @@ class Gameplay:
         self.titleScore.pack()
         # list for updating the scores
         self.varScores = []
-        self.gameUpdateLink = GameUpdateLink(self)
+        self.gameUpdateLink = GameUpdateLink(self, current_session)
         self.gameUpdateLink.create(client.name)
+
+        while self.gameUpdateLink.latest_game.game_status == protocol._PENDING:
+            print("wait up..")
+            time.sleep(0.1)
 
         for player in self.current_session.current_players:
             self.varScore = StringVar()
@@ -36,6 +41,8 @@ class Gameplay:
             self.varScore.set(player.nickname + ": " + str(player.score))
             self.varScores.append(self.varScore)
             self.lblScore.pack()
+
+        # print("did you wait 10 secs?")
 
         '''
         # to allow just typing in 1 number in the entries

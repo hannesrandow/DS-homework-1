@@ -167,6 +167,12 @@ def client_thread(sock, addr, games):
                 else:
                     sock.send(protocol._RSP_SESSION_FULL)
 
+                for other_player in joined_session.current_players:
+                    # TODO: exlude the current player that upated the game!
+                    # if other_player != player:
+                    other_player.send_game_updates(joined_session)
+                    print "[based a join rqst] game updates sent to : ", other_player.nickname
+
             elif protocol.server_process(header) == protocol._SA_CURRENT_SESSIONS:
                 pickle_current_sessions = pickle.dumps(games.get_sessions())
                 sock.send(pickle_current_sessions)
@@ -193,7 +199,7 @@ def client_thread(sock, addr, games):
                     # TODO: exlude the current player that upated the game!
                     # if other_player != player:
                     other_player.send_game_updates(my_session)
-                    print "game updates sent to ", other_player.nickname
+                    print "[based a game update rqst] game updates sent to ", other_player.nickname
 
 
             elif header == protocol._TERMINATOR:
