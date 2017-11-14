@@ -1,3 +1,7 @@
+"""
+The server script
+"""
+
 import pickle
 import socket
 import threading
@@ -32,6 +36,12 @@ class GamesHandler:
         return True
 
     def new_session(self, information, current_player):
+        """
+        This method is called when a user creates a new session.
+        :param information: Contains the name that the user gave to the game.
+        :param current_player: The player that created the session.
+        :return: The newly created session.
+        """
         game_name = information.split(protocol._MSG_FIELD_SEP)[1]
 
         # if not self.__is_name_valid(game_name):
@@ -43,7 +53,7 @@ class GamesHandler:
 
         s_id = len(self.current_sessions ) + 1
         current_player.current_session_id = s_id
-        session = Session('running', s_id, game_name,
+        session = Session('pending', s_id, game_name,
                           'sudoku/puzzles/sudoku_easy_1.csv',
                           'sudoku/puzzles/sudoku_easy_1_solution.csv',
                           max_num_of_players,
@@ -56,6 +66,12 @@ class GamesHandler:
         return session
 
     def join_session(self, information, player):
+        """
+        This method gets called when a user reqeusts to join an already up and running session.
+        :param information: Contains the id of the session that the user wants to join.
+        :param player: The player instance representing the user that wants to join the session
+        :return: The session that was joined, if the maximum number of players was not reached yet. None otherwise.
+        """
         try: # if input of int() is not convertible to integer it throws an error
             req_ses_id = int(information.split(protocol._MSG_FIELD_SEP)[1])
         except ValueError:
@@ -77,6 +93,11 @@ class GamesHandler:
             return None
 
     def get_session(self, id):
+        """
+        This method gets called when a user requests to get the sessions that are currently running.
+        :param id:
+        :return:
+        """
         target_session = None
         for s in self.current_sessions:
             if s.game_id == id:
@@ -85,16 +106,31 @@ class GamesHandler:
         # return self.current_sessions[id]
 
     def get_sessions(self):
+        """
+        This method gets called when a user requests to get the sessions that are currently running.
+        :return: A list of the sessions currently running.
+        """
         return self.current_sessions
 
     def leave_session(self):
         pass
 
     def get_num_of_sessions(self):
+        """
+        This method gets called when a user requests to get the sessions that are currently running.
+        :return: Number of sessions currently running.
+        """
         return len(self.current_sessions)
 
 
 def client_thread(sock, addr, games):
+    """
+    Handles the all the requests a client makes to the server.
+    :param sock: Client socket.
+    :param addr: Client address.
+    :param games: A gameshandler.
+    :return: None
+    """
     print 'created new thread for client', addr
 
     global shouldRunning
@@ -186,6 +222,11 @@ def client_thread(sock, addr, games):
 
 
 def handle_link_backs(games):
+    """
+    This method takes care of the link backs, which are used to send the session to the client.
+    :param games: A gameshandler
+    :return: None
+    """
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind((HOST, GAME_UPDATE_PORT))
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
