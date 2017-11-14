@@ -6,6 +6,7 @@ class MultiplayerGameDialog:
     def __init__(self, client):
         self.root = Tk()
         self.client = client
+        self.session = None     # either filled with the create_session or join_session
         self.lblName = Label(self.root, text="Name: ")
         self.lblName.grid(row=0)
         self.enterName = Entry(self.root)
@@ -28,12 +29,18 @@ class MultiplayerGameDialog:
     def create_session(self):
         self.name = self.enterName.get()
         self.number = self.enterNumber.get()
+        self.session = self.client.create_session(self.name, self.number)
         self.root.destroy()
 
     def select_session_from_list_on_double_click(self, event):
         index = event.widget.curselection()[0]
         self.currentSession = self.currentSessions[index]
-        self.root.destroy()
+        rsp = self.client.join_session(self.currentSession.game_id)
+        if type(rsp) == str:
+            tkMessageBox.showinfo('Session is full!', 'Oops.. people already having fun on this session. try another!')
+        else:
+            self.session = rsp
+            self.root.destroy()
 
 
     def get_current_sessions(self,client):

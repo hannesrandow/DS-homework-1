@@ -13,7 +13,7 @@ class ClientGUI:
     def __init__(self):
         self.sock = socket(AF_INET, SOCK_STREAM)
         self.sock.connect((HOST, PORT))
-        self.gameplayGUI = None
+        self.name = None
 
     def leave_session(self):
         pass
@@ -64,12 +64,9 @@ class ClientGUI:
     '''
 
     def create_session(self, game_name, max_num_players):
+        # print("create session")
         new_session = self.send_request(protocol._REQ_CREATE_SESSION + protocol._MSG_FIELD_SEP +
                                         game_name + protocol._MSG_FIELD_SEP + max_num_players)
-        if self.gameplayGUI:
-            self.gameUpdateLink = GameUpdateLink(self.gameUpdateLink)
-            self.gameUpdateLink.create(self.nickname)
-
         return new_session
 
     def get_current_sessions(self):
@@ -78,20 +75,17 @@ class ClientGUI:
 
     def nickname(self, n):
         self.send_request(protocol._REQ_NICKNAME + protocol._MSG_FIELD_SEP + n)
-        self.nickname = n
+        self.name = n
         return
 
     def connect(self):
         self.send_request(protocol._REQ_INITIAL_CONNECT)
         return
 
-    def join_session(self, user_action):
-        session_id = user_action.split(' ')[1]
-        rsp = self.send_request(protocol._REQ_JOIN_SESSION + protocol._MSG_FIELD_SEP + session_id)
+    def join_session(self, session_id):
+        # print("join the session")
+        rsp = self.send_request(protocol._REQ_JOIN_SESSION + protocol._MSG_FIELD_SEP + str(session_id))
         if type(rsp) != bool:
-            if self.gameplayGUI:
-                self.gameUpdateLink = GameUpdateLink(self.gameUpdateLink)
-                self.gameUpdateLink.create(self.nickname)
             return rsp
         else:
             return 'session full'
@@ -109,12 +103,12 @@ def client_gui_main(args=None):
     # TODO: use Enter Address Dialog to get the server address
     # Done: use Multiplayer Game Dialog to join existing session or create a new one
     m = MultiplayerGameDialog(client)
-    try:
-        current_session = client.create_session(m.name, m.number)
-    except:
-        current_session = client.create_session(m.currentSession.game_name, str(m.currentSession.max_num_of_players))
-    gameplayGUI = Gameplay(current_session, client)
-    client.gameplayGUI = gameplayGUI
+    # print("session created")
+    if m.session:
+        gameplayGUI = Gameplay(m.session, client)
+    else:
+        print("session is empty -- probably from multiplayerdiaglo")
+
 
 if __name__ == '__main__':
     client_gui_main()

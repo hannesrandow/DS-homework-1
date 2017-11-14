@@ -23,8 +23,10 @@ class Player(object):
         """This method is called for every player when their game udpated"""
         pickle_session = pickle.dumps(session)
         if self.link_back_sock:
-            # print ("send update to ", self.nickname)
+            print ("send update to ", self.nickname)
             self.link_back_sock.send(pickle_session)
+        else:
+            print("#### link back socket not existing! ####")
 
     def close(self):
         if self.link_back_sock:

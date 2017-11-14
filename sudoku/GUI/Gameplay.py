@@ -1,6 +1,7 @@
 from Tkinter import *
 import tkMessageBox
 
+from sudoku.client.game_update_link import GameUpdateLink
 
 LENGTH = 470
 MARGIN = 10
@@ -26,6 +27,9 @@ class Gameplay:
         self.titleScore.pack()
         # list for updating the scores
         self.varScores = []
+        self.gameUpdateLink = GameUpdateLink(self)
+        self.gameUpdateLink.create(client.name)
+
         for player in self.current_session.current_players:
             self.varScore = StringVar()
             self.lblScore = Label(self.frameScoreInput, textvariable=self.varScore)
