@@ -34,6 +34,7 @@ _SA_JOIN_SESSION = 'sa6'
 # session status
 _PENDING = 'ss0'
 _READY = 'ss1'
+_COMPLETED = 'ss2'
 
 # field separator for sending multiple values ---------------------------------
 _MSG_FIELD_SEP = ':'

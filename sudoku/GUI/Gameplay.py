@@ -4,6 +4,9 @@ import time
 import sudoku.common.protocol as protocol
 from sudoku.client.game_update_link import GameUpdateLink
 
+from sudoku.common import protocol
+
+
 LENGTH = 470
 MARGIN = 10
 WIDTH_ENTRIES = 1
@@ -74,11 +77,18 @@ class Gameplay:
         self.btnLeaveSession.pack(pady=100)
         self.root.mainloop()
 
-        # TODO: pronounce the winner of the session
-        tkMessageBox.showinfo("Game finished", "Winner is: ")
-
     def leave_session(self):
         # TODO: self.client.leave_session()
+        if self.current_session.game_state == protocol._COMPLETED:
+            scores = [player.score for player in self.current_session.current_players]
+            winner = self.current_session.current_players[scores.index(max(scores))]
+            if winner.client_ip == self.client.sock.getsockname():
+                tkMessageBox("Game finished", "You win!")
+            else:
+                tkMessageBox("Game finished", "Winner is: " + winner.name)
+
+        self.gameUpdateLink.destroy()
+        self.client.sock.close()
         self.root.destroy()
 
     '''
@@ -166,8 +176,8 @@ class Gameplay:
     # 'public' method to be called from outside to refresh the GUI with updates
     def update(self, updated_session):
         self.current_session = updated_session
-        # TODO: leave the game after sudoku is completely solved
-        if self.current_session.game_state == self.current_session.game_solution:
+        # leave the game after sudoku is completely solved
+        if self.current_session.game_state == protocol._COMPLETED: # self.current_session.game_solution:
             self.leave_session()
         self.draw_numbers()
         self.update_scores()
