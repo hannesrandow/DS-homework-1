@@ -83,8 +83,7 @@ class ClientGUI:
         self.name = n
         return
 
-    def connect(self, address):
-        self.sock.connect((address, PORT))
+    def connect(self):
         self.send_request(protocol._REQ_INITIAL_CONNECT)
         return
 
@@ -104,8 +103,8 @@ def client_gui_main(args=None):
     client = ClientGUI()
 
     nicknameGUI = EnterNicknameDialog()
-    addressGUI = EnterServerAddressDialog()
-    client.connect(addressGUI.address)
+    addressGUI = EnterServerAddressDialog(client)
+    client.connect()
     client.nickname(nicknameGUI.nickname)
     # Done: use Multiplayer Game Dialog to join existing session or create a new one
     m = MultiplayerGameDialog(client)

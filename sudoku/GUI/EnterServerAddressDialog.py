@@ -2,9 +2,13 @@ from Tkinter import *
 import tkMessageBox
 import re
 
+from sudoku.common import protocol
+
+
 class EnterServerAddressDialog:
-    def __init__(self):
+    def __init__(self, client):
         self.root = Tk()
+        self.client = client
         self.address = ""
         self.lblAddress = Label(self.root, text="Please enter the address of the server: ")
         self.lblAddress.pack(side=LEFT)
@@ -18,13 +22,11 @@ class EnterServerAddressDialog:
         address = self.entryAddress.get()
         r = re.compile("\d*\.\d*\.\d*\.\d*")
         if r.match(address) is not None:
-            self.address = address
-            self.root.destroy()
+            try:
+                self.client.sock.connect((address, protocol.PORT))
+                self.address = address
+                self.root.destroy()
+            except:  # sock.error
+                tkMessageBox.showerror("Connection refused", "Server not found")
         else:
             tkMessageBox.showinfo("Wrong Input", "You have to enter a server address like 168.0.0.1")
-        '''
-        try:
-            # TODO: connect with server
-        catch SocketException e:
-            tkMessageBox.showerror("Exception", "Connection Exception: Not connected")
-        '''
