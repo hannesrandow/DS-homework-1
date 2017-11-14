@@ -1,3 +1,8 @@
+"""
+This script handles the GUI for the user and communicates with the server.
+"""
+
+
 import pickle
 from socket import AF_INET, SOCK_STREAM, socket
 from sudoku.GUI.Gameplay import *

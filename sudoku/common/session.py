@@ -14,6 +14,7 @@ class Session(object):
         self.current_players = current_players
         self.game_state = []
         self.game_solution = []
+        self.ready = False   #False if still waiting for players, true if ready to play
         
     def read_game(self, path):
         """        
@@ -59,10 +60,10 @@ class Session(object):
         self.game_state = self.read_game(self.new_game_path)
         self.game_solution = self.read_game(self.game_solution_path)
 
-    def game_finish():
+    def game_finish(self):
         pass
 
-    def terminate_session():
+    def terminate_session(self):
         pass
 
     def add_player(self, player):
@@ -70,4 +71,6 @@ class Session(object):
         if self.max_num_of_players - len(self.current_players) > 0:
             self.current_players.append(player)
             was_successful = True
+            if self.max_num_of_players == len(self.current_players):
+                self.ready = True
         return was_successful

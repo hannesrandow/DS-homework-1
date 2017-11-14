@@ -1,5 +1,6 @@
 """
-Starter Script for Sudoku client
+This is the main script for the client.
+It calls all the necessary scripts on the client side
 """
 
 from argparse import ArgumentParser # Parsing command line arguments
@@ -35,6 +36,8 @@ if __name__ == '__main__':
 
     # Run client awesome
     if args.gui:
+        #Run application with GUI
         client_gui_main(args)
     else:
+        #Run application from terminal
         client_terminal_main(args)
