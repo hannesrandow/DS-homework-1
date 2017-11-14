@@ -30,16 +30,17 @@ class ClientGUI:
         # TODO: send the information of the to changing session (which session)
         update_request = self.send_request(protocol._REQ_UPDATE_GAME + protocol._MSG_FIELD_SEP +
                                            str(row) + protocol._MSG_FIELD_SEP + str(col) + protocol._MSG_FIELD_SEP + str(value))
-        if update_request.game_state != session.game_state:
+        # if update_request.game_state != session.game_state:
             # to deselect in the gui (removing the cursor)
-            gui.row, gui.col = -1, -1
+            # gui.row, gui.col = -1, -1
+        if update_request[1]:
             # TODO: update score +1
             print 'correct'
         else:
             # TODO: update score -1
             print 'incorrect'
 
-        gui.update(update_request)
+        gui.update(update_request[0])
 
     '''
     def update(self, user_action, current_session):
