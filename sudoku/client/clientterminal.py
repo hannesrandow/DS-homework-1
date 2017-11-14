@@ -190,6 +190,7 @@ class ClientTerminal:
         :return: None
         """
         self.gameUpdateLink.destroy()
+        self.socket.shutdown(2)
         self.socket.close()
 
 

@@ -140,8 +140,7 @@ def client_thread(sock, addr, games):
         sleep(1)
         try:
             header = sock.recv(recv_buffer_length)
-            if header == 0:
-                print ("header 000000")
+            if header == '':
                 break
             if protocol.server_process(header) == protocol._SA_NEW_PLAYER:
                 player = Player(addr)
@@ -207,7 +206,9 @@ def client_thread(sock, addr, games):
         except KeyboardInterrupt as e:
             break
         except Exception as e:
+            print("Exception for client", addr)
             print(e)
+            print("continue processing..")
             continue
 
     # if reached here then connection had to be terminated
@@ -235,8 +236,7 @@ def handle_link_backs(games):
     """
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind((HOST, GAME_UPDATE_PORT))
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR | socket.SO_KEEPALIVE, 1)
 
     sock.listen(0)
     while shouldRunning:
@@ -265,7 +265,6 @@ def server_main(args=None):
     server_socket.bind((HOST, PORT))
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     backlog = 0
-    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
     # server_socket.listen(backlog)
 
     games = GamesHandler()
