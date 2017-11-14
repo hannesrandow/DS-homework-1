@@ -1,6 +1,8 @@
 import csv
 import os
 
+from sudoku.common import protocol
+
 
 class Session(object):
     """
@@ -107,5 +109,7 @@ class Session(object):
         was_successful = False
         if self.max_num_of_players - len(self.current_players) > 0:
             self.current_players.append(player)
+            if self.max_num_of_players == len(self.current_players):
+                self.game_status = protocol._READY
             was_successful = True
         return was_successful

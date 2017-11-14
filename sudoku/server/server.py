@@ -53,7 +53,7 @@ class GamesHandler:
 
         s_id = len(self.current_sessions ) + 1
         current_player.current_session_id = s_id
-        session = Session('pending', s_id, game_name,
+        session = Session(protocol._PENDING, s_id, game_name,
                           'sudoku/puzzles/sudoku_easy_1.csv',
                           'sudoku/puzzles/sudoku_easy_1_solution.csv',
                           max_num_of_players,

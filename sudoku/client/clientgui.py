@@ -5,6 +5,9 @@ This script handles the GUI for the user and communicates with the server.
 
 import pickle
 from socket import AF_INET, SOCK_STREAM, socket
+import time
+
+from sudoku.GUI.EnterServerAddressDialog import EnterServerAddressDialog
 from sudoku.GUI.Gameplay import *
 from sudoku.GUI.EnterNicknameDialog import *
 from sudoku.GUI.MultiplayerGameDialog import *
@@ -17,7 +20,6 @@ from sudoku.client.game_update_link import GameUpdateLink
 class ClientGUI:
     def __init__(self):
         self.sock = socket(AF_INET, SOCK_STREAM)
-        self.sock.connect((HOST, PORT))
         self.gameplayGUI = None
 
     def leave_session(self):
@@ -86,7 +88,8 @@ class ClientGUI:
         self.nickname = n
         return
 
-    def connect(self):
+    def connect(self, address):
+        self.sock.connect((address, PORT))
         self.send_request(protocol._REQ_INITIAL_CONNECT)
         return
 
@@ -107,17 +110,22 @@ class ClientGUI:
 
 def client_gui_main(args=None):
     client = ClientGUI()
-    client.connect()
 
-    e = EnterNicknameDialog()
-    client.nickname(e.nickname)
-    # TODO: use Enter Address Dialog to get the server address
+    nicknameGUI = EnterNicknameDialog()
+    addressGUI = EnterServerAddressDialog()
+    client.connect(addressGUI.address)
+    client.nickname(nicknameGUI.nickname)
     # Done: use Multiplayer Game Dialog to join existing session or create a new one
     m = MultiplayerGameDialog(client)
     try:
         current_session = client.create_session(m.name, m.number)
     except:
         current_session = client.create_session(m.currentSession.game_name, str(m.currentSession.max_num_of_players))
+
+
+        
+    while current_session.game_status == protocol._PENDING:
+        time.sleep(0.1)
     gameplayGUI = Gameplay(current_session, client)
     client.gameplayGUI = gameplayGUI
 
