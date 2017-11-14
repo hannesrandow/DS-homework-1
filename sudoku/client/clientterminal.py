@@ -147,7 +147,7 @@ class ClientTerminal:
             # current_session = create_session('test_game', '5')
             user_input = user_action.split(' ')
             self.current_session = self.create_session(user_input[1], user_input[2])
-            self.gameUpdateLink.create(self.client_specifier)
+            self.gameUpdateLink.create(self.socket.getsockname())
             # print 'new session created'
         elif user_action.startswith('-printsession'):
             #if not self.current_session:
@@ -164,7 +164,7 @@ class ClientTerminal:
             inf = user_action.split(' ')
         elif user_action.startswith('-join'):
             rsp = self.join_session(user_action)
-            self.gameUpdateLink.create(self.client_specifier)
+            self.gameUpdateLink.create(self.socket.getsockname())
             # print "--- we're joined --- "
             # print rsp
             if type(rsp) == str:

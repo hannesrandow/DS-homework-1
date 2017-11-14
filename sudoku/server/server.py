@@ -199,10 +199,9 @@ def client_thread(sock, addr, games):
                 sock.send(pickle_session)
                 # send to other players of the same session
                 for other_player in my_session.current_players:
-                    # TODO: exlude the current player that upated the game!
-                    # if other_player != player:
-                    other_player.send_game_updates(my_session)
-                    print "[based a game update rqst] game updates sent to ", other_player.nickname
+                    if other_player != player:
+                        other_player.send_game_updates(my_session)
+                        print "[based a game update rqst] game updates sent to ", other_player.nickname
 
 
             elif header == protocol._TERMINATOR:
@@ -222,14 +221,24 @@ def client_thread(sock, addr, games):
     player.close()
     print("client link back closed")
 
-    if player:
-        session_current_players = games.get_session(player.current_session_id).current_players
-        session_current_players.remove(player)  # remove player from his session
+    # update list of players
+    if player and player.current_session_id:
+        current_game = games.get_session(player.current_session_id)
+        current_game.current_players.remove(player)  # remove player from his session
+        # check on the status of the game if only one player is left -> game completed
+        if len(current_game.current_players) == 1:
+            current_game.game_status = protocol._COMPLETED
+            for other_player in current_game.current_players:
+                other_player.send_game_updates(current_game)
+                print "only one player left -> game ends for : ", other_player.nickname
+
         current_players.remove(player)  # remove player from current_players list
         print("current_players list being updated..")
         player = None
     else:
         print("player object is none [weird!!]")
+
+
 
 
 def handle_link_backs(games):
@@ -246,13 +255,14 @@ def handle_link_backs(games):
     while shouldRunning:
         client_sock, client_addr = sock.accept()
         player_id = client_sock.recv(1000)
+        id = pickle.loads(player_id)
 
         found = False
         for sess in games.current_sessions:
             if found:
                 break
             for p in sess.current_players:
-                if p.nickname == player_id:
+                if p.client_ip == id:
                     p.link_back_sock = client_sock
                     found = True
                     print("link back established with player_id: ", player_id)

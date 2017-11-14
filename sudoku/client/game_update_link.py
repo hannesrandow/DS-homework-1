@@ -21,7 +21,8 @@ class GameUpdateLink:
         # TODO: a timeout!!
         print("waiting for the link back connection..")
         self.__gu_sock.connect((HOST, GAME_UPDATE_PORT))
-        self.__gu_sock.send(player_id)
+        d = pickle.dumps(player_id)
+        self.__gu_sock.send(d)
         self.__gu_sock.settimeout(4)
         print("link back is made!")
         while self.__shouldRunning:
@@ -41,11 +42,11 @@ class GameUpdateLink:
                 break
                 # todo: game update
 
-    def create(self, player_id):
-        print(player_id)
+    def create(self, client_ip):
+        print("specifier to create link back with: " , client_ip)
         if not self.threaddd:
             self.threaddd = \
-                threading.Thread(target=self.game_updates_thread, args=(player_id,)).start()
+                threading.Thread(target=self.game_updates_thread, args=(client_ip,)).start()
         else:
             print "Already created a link!"
             # TODO: print more details
@@ -53,6 +54,7 @@ class GameUpdateLink:
     def destroy(self):
         if self.threaddd:
             self.__shouldRunning = False
+            # FIXME: thread is not being closed correctly! something sucks about socket
             self.threaddd.join()
             self.threaddd = None
         self.__gu_sock.shutdown(2)

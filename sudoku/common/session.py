@@ -78,6 +78,8 @@ class Session(object):
             if self.game_solution[row][column] == number:
                 self.game_state[row][column] = number
                 correct = True
+        if self.game_state == self.game_solution:
+            self.game_status = protocol._COMPLETED
         #update score of the player that made the change
         update_score(correct)
         return correct
