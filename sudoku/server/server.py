@@ -271,6 +271,11 @@ def handle_link_backs(games):
 
 
 def server_main(args=None):
+    """
+    Main thread to run the server
+    :param args: Arguments passed to server. Game
+    :return: None
+    """
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((HOST, PORT))
