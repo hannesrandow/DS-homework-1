@@ -75,6 +75,8 @@ class Gameplay:
         '''
         self.btnLeaveSession = Button(self.frameScoreInput, text="Leave Game", width=20, command=self.leave_session)
         self.btnLeaveSession.pack(pady=100)
+        # overwrite the method to close the window (x)
+        self.root.protocol("WM_DELETE_WINDOW", self.leave_session())
         self.root.mainloop()
 
     def leave_session(self):
