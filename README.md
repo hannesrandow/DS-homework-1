@@ -15,3 +15,5 @@ If you want to add more sudoku puzzles, do the following:
 - It is important that the solution has the same name, with _solution added to it
 
 For example if the sudoku puzzle is stored in the file sudoku1.csv then the solution should be in the file sudoku1_solution.csv
+
+It is highly recommended to run the application on Linux.
