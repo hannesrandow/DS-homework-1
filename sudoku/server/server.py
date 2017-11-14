@@ -26,6 +26,9 @@ class GamesHandler:
     current_sessions = []
 
     def __init__(self, args):
+        """
+        :param args: Contains the name of the sudoku puzzle
+        """
         self.current_sessions = []
         self.__lock = threading.Lock()
         self.sudoku_name = args.filename
