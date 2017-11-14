@@ -1,6 +1,7 @@
 # DS-homework-1
 
 
+Make sure that tkinter is installed.
 
 Running the application:
 - Navigate to the root of the repository
