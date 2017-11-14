@@ -28,7 +28,10 @@ if __name__ == '__main__':
 
     # Parsing arguments
     parser = ArgumentParser(description=__info(), version = ___VER)
+    parser.add_argument('-f', '--filename', help='the name of the sudoku',
+                        action='store_true', default='sudoku_easy_1')
     args = parser.parse_args()
+
 
     # Run server awesome
     server_main(args)

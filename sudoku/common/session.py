@@ -31,16 +31,16 @@ class Session(object):
         self.game_state = []        #Current game state. Numbers in the cells (empty cells have a 0)
         self.game_solution = []     #The solution to the sudoku puzzle. Nested list.
         
-    def read_game(self, path):
+    def read_game(self, name):
         """
         This method parses a sudoku puzzle. Sudoku puzzles must be in csv files.
-        :param path: Path to the csv file containing the sudoku puzzle
+        :param name: Name of the csv file containing the sudoku puzzle
         :return: A nested list of the sudoku puzzle. Each row in the sudoku is one list.
         """
-        cwd = os.getcwd()
+        puzzle = os.getcwd() + '/sudoku/puzzles/' + name + '.csv'
         
         game = []
-        with open(path) as sudoku:
+        with open(puzzle) as sudoku:
             read_sudoku = csv.reader(sudoku, delimiter=',')
             for row in read_sudoku:
                 row = [int(x) for x in row]

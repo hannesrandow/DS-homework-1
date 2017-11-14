@@ -25,9 +25,11 @@ class GamesHandler:
     """
     current_sessions = []
 
-    def __init__(self):
+    def __init__(self, args):
         self.current_sessions = []
         self.__lock = threading.Lock()
+        self.sudoku_name = args.filename
+        self.sudoku_sol = args.filename + '_solution'
 
     def __is_name_valid(self, game_name):
         for s in self.current_sessions:
@@ -54,8 +56,10 @@ class GamesHandler:
         s_id = len(self.current_sessions ) + 1
         current_player.current_session_id = s_id
         session = Session(protocol._PENDING, s_id, game_name,
-                          'sudoku/puzzles/sudoku_easy_1.csv',
-                          'sudoku/puzzles/sudoku_easy_1_solution.csv',
+                          self.sudoku_name,
+                          self.sudoku_sol,
+        #                  'sudoku/puzzles/sudoku_easy_1.csv',
+        #                  'sudoku/puzzles/sudoku_easy_1_solution.csv',
                           max_num_of_players,
                           [current_player])
         session.game_start()
@@ -272,7 +276,7 @@ def server_main(args=None):
     backlog = 0
     # server_socket.listen(backlog)
 
-    games = GamesHandler()
+    games = GamesHandler(args)
     global shouldRunning
     threads = []
     # handle links with thread
