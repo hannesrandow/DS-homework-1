@@ -20,6 +20,11 @@ class EnterNicknameDialog:
         self.root.mainloop()
 
     def confirm_nickname(self):
+        '''
+        checks if the name is alphanumerical and if it has at maximum 8 symbols
+        if the name is fine the window is closed
+        :return: None
+        '''
         name = self.enterNickname.get()
         if len(name) <= 8 and name.isalnum():
             self.nickname = name
@@ -29,6 +34,11 @@ class EnterNicknameDialog:
         pass
 
     def select_nickname_from_list_on_double_click(self, event):
+        '''
+        double click on list element updates the name entry
+        :param event: double click event on list
+        :return: None
+        '''
         # at first clear entry
         self.enterNickname.delete(0, 'end')
         self.enterNickname.insert(0, self.listNicknames.get(ACTIVE))

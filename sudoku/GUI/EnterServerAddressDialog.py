@@ -19,6 +19,11 @@ class EnterServerAddressDialog:
         self.root.mainloop()
 
     def confirm_server_address(self):
+        '''
+        checks the entry input if it is in the right format and after this if it is possible to connect to the server
+        if the address is fine the connection is established and the window itself is closed
+        :return: None
+        '''
         address = self.entryAddress.get()
         r = re.compile("\d*\.\d*\.\d*\.\d*")
         if r.match(address) is not None:
@@ -26,7 +31,7 @@ class EnterServerAddressDialog:
                 self.client.sock.connect((address, protocol.PORT))
                 self.address = address
                 self.root.destroy()
-            except:  # sock.error
+            except:
                 tkMessageBox.showerror("Connection refused", "Server not found")
         else:
             tkMessageBox.showinfo("Wrong Input", "You have to enter a server address like 168.0.0.1")

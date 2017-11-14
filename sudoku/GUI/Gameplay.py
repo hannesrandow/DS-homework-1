@@ -29,8 +29,6 @@ class Gameplay:
         self.frameScoreInput.grid(row=0, column=1, padx=10, pady=10)
         self.titleScore = Label(self.frameScoreInput, text="Scores:", font="Arial 12 bold")
         self.titleScore.pack()
-        # list for updating the scores
-        self.varScores = []
         self.gameUpdateLink = GameUpdateLink(self, current_session)
         self.gameUpdateLink.create(client.name)
 
@@ -38,6 +36,9 @@ class Gameplay:
             print("wait up..")
             time.sleep(0.1)
 
+        # list for updating the scores
+        self.varScores = []
+        # Labels for scores (will just be updated during the game
         for player in self.current_session.current_players:
             self.varScore = StringVar()
             self.lblScore = Label(self.frameScoreInput, textvariable=self.varScore)
@@ -45,34 +46,6 @@ class Gameplay:
             self.varScores.append(self.varScore)
             self.lblScore.pack()
 
-        # print("did you wait 10 secs?")
-
-        '''
-        # to allow just typing in 1 number in the entries
-        self.rowValue = StringVar()
-        self.rowValue.trace('w', self.limit_row_input)
-        self.columnValue = StringVar()
-        self.columnValue.trace('w', self.limit_column_input)
-        self.valueValue = StringVar()
-        self.valueValue.trace('w', self.limit_value_input)
-
-        self.frameInput = Frame(self.frameScoreInput)
-        self.frameInput.pack(pady=20)
-        self.lblRow = Label(self.frameInput, text="Row: ")
-        self.lblRow.grid(row=0)
-        self.entryRow = Entry(self.frameInput, width=WIDTH_ENTRIES, textvariable=self.rowValue)
-        self.entryRow.grid(row=0, column=1)
-        self.lblColumn = Label(self.frameInput, text="Column: ")
-        self.lblColumn.grid(row=0, column=2)
-        self.entryColumn = Entry(self.frameInput, width=WIDTH_ENTRIES, textvariable=self.columnValue)
-        self.entryColumn.grid(row=0, column=3)
-        self.lblValue = Label(self.frameInput, text="Value: ")
-        self.lblValue.grid(row=0, column=4)
-        self.entryValue = Entry(self.frameInput, width=WIDTH_ENTRIES, textvariable=self.valueValue)
-        self.entryValue.grid(row=0, column=5)
-        self.btnLeaveSession = Button(self.frameScoreInput, text="Leave Game", width=20, command=self.leave_session)
-        self.btnLeaveSession.pack(pady=100)
-        '''
         self.btnLeaveSession = Button(self.frameScoreInput, text="Leave Game", width=20, command=self.leave_session)
         self.btnLeaveSession.pack(pady=100)
         # overwrite the method to close the window (x)
@@ -80,7 +53,13 @@ class Gameplay:
         self.root.mainloop()
 
     def leave_session(self):
-        # TODO: self.client.leave_session()
+        '''
+        called when user pushes close or leaving session button or when game is solved
+        pronounces the winner if sudoku is solved or all except one left
+        closes the update link and the client's socket and the window itself
+        :return: None
+        '''
+        # in case the game is finished by solving the sudoku or all except one left
         if self.current_session.game_state == protocol._COMPLETED:
             scores = [player.score for player in self.current_session.current_players]
             winner = self.current_session.current_players[scores.index(max(scores))]
@@ -93,30 +72,11 @@ class Gameplay:
         self.client.sock.close()
         self.root.destroy()
 
-    '''
-    def limit_row_input(self, *args):
-        self.value = self.rowValue.get()
-        if not self.value.isdigit() or self.value == 0:
-            self.rowValue.set("")
-        if len(self.value) > 1:
-            self.rowValue.set(self.value[:1])
-
-    def limit_column_input(self, *args):
-        self.value = self.columnValue.get()
-        if not self.value.isdigit() or self.value == 0:
-            self.columnValue.set("")
-        if len(self.value) > 1:
-            self.columnValue.set(self.value[:1])
-
-    def limit_value_input(self, *args):
-        self.value = self.valueValue.get()
-        if not self.value.isdigit() or self.value == 0:
-            self.valueValue.set("")
-        if len(self.value) > 1:
-            self.valueValue.set(self.value[:1])
-    '''
-
     def draw_grid(self):
+        '''
+        draws the horizontal and vertical lines for the sudoku field
+        :return: None
+        '''
         for i in range(10):
             # blue lines for 3x3 fields
             color = "blue" if i % 3 == 0 else "gray"
@@ -129,6 +89,10 @@ class Gameplay:
             self.canvasSudoku.create_line(y, x0, y, x1, fill=color)
 
     def draw_numbers(self):
+        '''
+        draws the numbers of the current session
+        :return: None
+        '''
         self.canvasSudoku.delete("numbers")
         for i in range(9):
             for j in range(9):
@@ -140,6 +104,11 @@ class Gameplay:
                     self.canvasSudoku.create_text(x, y, text=cellValue, font="Arial 12", tags="numbers", fill=color)
 
     def cell_clicked(self, event):
+        '''
+        updates row and column to show the clicked cell of the sudoku field
+        :param event: reaction on a click within the canvas (sudoku field)
+        :return: None
+        '''
         x, y = event.x, event.y
         if (MARGIN < x < LENGTH - MARGIN):
             self.canvasSudoku.focus_set()
@@ -152,6 +121,10 @@ class Gameplay:
         self.draw_cursor()
 
     def draw_cursor(self):
+        '''
+        draws a red rectangle to highlight the chosen cell
+        :return: None
+        '''
         self.canvasSudoku.delete("cursor")
         if self.row >= 0 and self.col >= 0:
             x0 = MARGIN + self.col * CELL + 1
@@ -160,23 +133,35 @@ class Gameplay:
             y1 = MARGIN + (self.row + 1) * CELL - 1
             self.canvasSudoku.create_rectangle(x0, y0, x1, y1, outline="red", tags="cursor")
 
-    # calls client's update method to send wished change to server
     def key_pressed(self, event):
+        '''
+        calls client's update method to send wished change to server (numbers 1 to 9)
+        :param event: used to react on keyboard input
+        :return:
+        '''
         if self.row >= 0 and self.col >= 0 and event.char in "123456789":  # and event.char not in [37, 38, 39, 40]:
             # to be sure that it is a number (not an arrow key or sth similar)
             try:
                 int(event.char)
                 self.client.update(self, self.row, self.col, event.char, self.current_session)
+            # Arrow keys and other keys are handled as numbers (try-except to avoid this)
             except:
                 return
-            # self.current_session.game_state[self.row][self.col] = int(event.char)
 
     def update_scores(self):
+        '''
+        updates the score labels with the current cores
+        :return: None
+        '''
         for idx, player in enumerate(self.current_session.current_players):
             self.varScores[idx].set(player.nickname + ": " + str(player.score))
 
-    # 'public' method to be called from outside to refresh the GUI with updates
     def update(self, updated_session):
+        '''
+        'public' method to be called from outside to refresh the GUI
+        :param updated_session: current_session is exchanged by this
+        :return: None
+        '''
         self.current_session = updated_session
         # leave the game after sudoku is completely solved
         if self.current_session.game_state == protocol._COMPLETED: # self.current_session.game_solution:
