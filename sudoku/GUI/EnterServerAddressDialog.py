@@ -24,6 +24,7 @@ class EnterServerAddressDialog:
         if r.match(address) is not None:
             try:
                 self.client.sock.connect((address, protocol.PORT))
+                self.client.client_ip = self.client.sock.getsockname()
                 self.address = address
                 self.root.destroy()
             except:  # sock.error

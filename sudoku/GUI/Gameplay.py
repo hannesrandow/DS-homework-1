@@ -32,11 +32,12 @@ class Gameplay:
         # list for updating the scores
         self.varScores = []
         self.gameUpdateLink = GameUpdateLink(self, current_session)
-        self.gameUpdateLink.create(client.name)
+        self.gameUpdateLink.create(self.client.client_ip)
 
+        print("wait up for other player..")
         while self.gameUpdateLink.latest_game.game_status == protocol._PENDING:
-            print("wait up..")
             time.sleep(0.1)
+        print("let's begin!")
 
         for player in self.current_session.current_players:
             self.varScore = StringVar()
@@ -79,14 +80,16 @@ class Gameplay:
 
     def leave_session(self):
         # TODO: self.client.leave_session()
-        if self.current_session.game_state == protocol._COMPLETED:
+        if self.current_session.game_status == protocol._COMPLETED:
             scores = [player.score for player in self.current_session.current_players]
             winner = self.current_session.current_players[scores.index(max(scores))]
+            print("tadaaaa")
             if winner.client_ip == self.client.sock.getsockname():
-                tkMessageBox("Game finished", "You win!")
+                tkMessageBox.showinfo("Game finished", "You win!")
             else:
-                tkMessageBox("Game finished", "Winner is: " + winner.name)
+                tkMessageBox.showinfo("Game finished", "Winner is: " + winner.nickname)
 
+        print("asdasdjklajsdkjasldjaskldj")
         self.gameUpdateLink.destroy()
         self.client.sock.close()
         self.root.destroy()
@@ -177,8 +180,10 @@ class Gameplay:
     def update(self, updated_session):
         self.current_session = updated_session
         # leave the game after sudoku is completely solved
-        if self.current_session.game_state == protocol._COMPLETED: # self.current_session.game_solution:
-            self.leave_session()
         self.draw_numbers()
         self.update_scores()
+        if self.current_session.game_status == protocol._COMPLETED: # self.current_session.game_solution:
+            print "this is leaving brudi"
+            self.leave_session()
+
 

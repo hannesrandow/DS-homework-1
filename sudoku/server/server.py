@@ -218,7 +218,7 @@ def client_thread(sock, addr, games):
     player.close()
     print("client link back closed")
 
-    if player:
+    if player and player.current_session_id:
         session_current_players = games.get_session(player.current_session_id).current_players
         session_current_players.remove(player)  # remove player from his session
         current_players.remove(player)  # remove player from current_players list
@@ -242,13 +242,14 @@ def handle_link_backs(games):
     while shouldRunning:
         client_sock, client_addr = sock.accept()
         player_id = client_sock.recv(1000)
+        id = pickle.loads(player_id)
 
         found = False
         for sess in games.current_sessions:
             if found:
                 break
             for p in sess.current_players:
-                if p.nickname == player_id:
+                if p.client_ip == id:
                     p.link_back_sock = client_sock
                     found = True
                     print("link back established with player_id: ", player_id)

@@ -19,6 +19,7 @@ class ClientGUI:
     def __init__(self):
         self.sock = socket(AF_INET, SOCK_STREAM)
         self.name = None
+        self.client_ip = None
 
     def leave_session(self):
         pass
