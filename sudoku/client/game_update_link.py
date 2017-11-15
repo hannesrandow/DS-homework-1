@@ -8,11 +8,12 @@ HOST = '127.0.0.1'
 
 class GameUpdateLink:
     """A class to handle update received from server to the client"""
-    def __init__(self, gui=None, session=None):
+    def __init__(self, serv_addr, gui=None, session=None):
         self.__gu_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.threaddd = None
         self.__shouldRunning = True
         self.gui = gui
+        self.serv_addr = serv_addr
         self.latest_game = session
         # print("game update link created")
 
@@ -20,7 +21,7 @@ class GameUpdateLink:
         # game updates (gu) socket
         # TODO: a timeout!!
         print("waiting for the link back connection..")
-        self.__gu_sock.connect((HOST, GAME_UPDATE_PORT))
+        self.__gu_sock.connect((self.serv_addr, GAME_UPDATE_PORT))
         d = pickle.dumps(player_id)
         self.__gu_sock.send(d)
         self.__gu_sock.settimeout(4)

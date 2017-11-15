@@ -112,7 +112,7 @@ def client_gui_main(args=None):
     # print("session created")
 
     if m.session:
-        gameplayGUI = Gameplay(m.session, client)
+        gameplayGUI = Gameplay(addressGUI.address, m.session, client)
     else:
         print("session is empty -- probably from multiplayerdiaglo")
 

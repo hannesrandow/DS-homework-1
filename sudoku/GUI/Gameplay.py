@@ -13,7 +13,7 @@ WIDTH_ENTRIES = 1
 CELL = (LENGTH - 2 * MARGIN) / 9
 
 class Gameplay:
-    def __init__(self, current_session, client):
+    def __init__(self, serv_addr, current_session, client):
         self.client = client
         self.root = Tk()
         self.row = 0
@@ -29,7 +29,7 @@ class Gameplay:
         self.frameScoreInput.grid(row=0, column=1, padx=10, pady=10)
         self.titleScore = Label(self.frameScoreInput, text="Scores:", font="Arial 12 bold")
         self.titleScore.pack()
-        self.gameUpdateLink = GameUpdateLink(self, current_session)
+        self.gameUpdateLink = GameUpdateLink(serv_addr, self, current_session)
         self.gameUpdateLink.create(self.client.client_ip)
 
         print("wait up for other player..")

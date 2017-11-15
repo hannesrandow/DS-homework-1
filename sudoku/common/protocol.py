@@ -1,5 +1,5 @@
 GAME_UPDATE_PORT = 7035
-HOST = '127.0.0.1'
+HOST = '0.0.0.0'
 PORT = 7805
 
 # acknowledgement
