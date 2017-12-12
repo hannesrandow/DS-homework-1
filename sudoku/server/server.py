@@ -333,7 +333,7 @@ def server_main(args=None):
 
     # clean-ups
     for thread in threads:
-       thread.join()
+       thread.join() # FIXME: cannot join game server discovery thread.. why?
     server_socket.close()
 
 
