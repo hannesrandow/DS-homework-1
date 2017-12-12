@@ -7,6 +7,8 @@ import socket
 import threading
 from time import sleep
 
+import struct
+
 from sudoku.common.protocol import GAME_UPDATE_PORT
 from sudoku.server.player import Player
 from sudoku.common import protocol
@@ -276,6 +278,24 @@ def handle_link_backs(games):
     print("link back checker on threading side got dismissed!!!")
 
 
+def game_server_beacon(interval):
+    """sending packets for discovery of this game server"""
+    print("start game server discovery packets..")
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    # Set the time-to-live for messages to 1 so they do not go past the
+    # local network segment.
+    # ttl = struct.pack('b', 1)
+    # sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
+
+    while shouldRunning:
+        sleep(interval)
+        sock.sendto(protocol.service_name, protocol.multicast_group)
+        # TODO: do LOG.debug
+        print('[discovery] beep..')
+        # print('send discovery packets to multicast group [%s]' % protocol.multicast_group[0])
+
+
 def server_main(args=None):
     """
     Main thread to run the server
@@ -294,6 +314,11 @@ def server_main(args=None):
     threads = []
     # handle links with thread
     t = threading.Thread(target=handle_link_backs, args=(games,)).start()
+    threads.append(t)
+
+    # game server discovery beacon
+    interval = 2   # 2 secs discovery_signal_interval
+    t = threading.Thread(target=game_server_beacon, args=(interval,)).start()
     threads.append(t)
 
     server_socket.listen(backlog)
