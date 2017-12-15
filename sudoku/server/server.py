@@ -6,6 +6,9 @@ import pickle
 import socket
 import threading
 from time import sleep
+from SimpleXMLRPCServer import SimpleXMLRPCServer
+from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
+from SocketServer import ThreadingMixIn
 
 import struct
 
@@ -20,6 +23,83 @@ client_addr_sockets = []
 recv_buffer_length = 1024
 current_players = []    # just for having a list of active players on server (no particular use!)
 shouldRunning = True    # a global variable for threads to know when to finish their loop
+
+# ThreadingMixIn allows multithreading
+class Server(ThreadingMixIn, SimpleXMLRPCServer):
+    # TODO: include client_thread in here
+    def __init__(self, args):
+        self.games = GamesHandler(args)
+        global shouldRunning
+        self.threads = []
+        # handle links with thread
+        t = threading.Thread(target=handle_link_backs, args=(games,)).start()
+        self.threads.append(t)
+
+        # game server discovery beacon
+        interval = 2  # 2 secs discovery_signal_interval
+        t = threading.Thread(target=game_server_beacon, args=(interval,)).start()
+        self.threads.append(t)
+
+        # Initilize RPC service on specific port
+        self.server_sock = (args.laddr, int(args.port))
+        self.server = SimpleXMLRPCServer(self.server_sock, requestHandler=SimpleXMLRPCRequestHandler, allow_none=True)
+        # Register server-side functions into RPC middleware
+        self.server.register_introspection_functions()
+        self.server.register_instance(self)
+        # Start the main thread now
+        self.start_main()
+
+    def start_main(self):
+        try:
+            self.server.serve_forever()
+        except KeyboardInterrupt:
+            shouldRunning = False
+            print "Server interrupted by CTRL+C"
+        self.server.shutdown()
+        self.server.server_close()
+        print "Terminating..."
+        return
+
+    def leave_session(self):
+        self.games.leave_session()
+
+    def update(self):
+        # TODO: my_session = self.games.get_session(s)
+        pass
+
+    def create_session(self, game_name, num_players):
+        # TODO: self.games.new_session()
+        pass
+
+    def get_current_sessions(self):
+        return self.games.get_sessions()
+
+    def nickname(self, n):
+        # TODO: don't know what to do here
+        pass
+
+    def connect(self):
+        self.games.join_session()
+        return
+
+
+    def join_session(self, session_id):
+        self.games.join_session(session_id)
+
+# following should not be necessary thanks to ThreadingMixIn
+        # while True:  # grand loop of the server
+        #     try:
+        #         client_socket, client_addr = self.server_socket.accept()
+        #         t = threading.Thread(target=client_thread, args=(client_socket, client_addr, games)).start()
+        #         self.threads.append(t)
+        #     except KeyboardInterrupt as e:
+        #         shouldRunning = False
+        #         break
+
+        # clean-ups
+        for thread in self.threads:
+            thread.join()  # FIXME: cannot join game server discovery thread.. why?
+        self.server_socket.close()
 
 class GamesHandler:
     """
@@ -302,39 +382,8 @@ def server_main(args=None):
     :param args: Arguments passed to server. Game
     :return: None
     """
+    Server(args)
 
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((HOST, PORT))
-    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    backlog = 0
-    # server_socket.listen(backlog)
-
-    games = GamesHandler(args)
-    global shouldRunning
-    threads = []
-    # handle links with thread
-    t = threading.Thread(target=handle_link_backs, args=(games,)).start()
-    threads.append(t)
-
-    # game server discovery beacon
-    interval = 2   # 2 secs discovery_signal_interval
-    t = threading.Thread(target=game_server_beacon, args=(interval,)).start()
-    threads.append(t)
-
-    server_socket.listen(backlog)
-    while True:  # grand loop of the server
-        try:
-            client_socket, client_addr = server_socket.accept()
-            t = threading.Thread(target=client_thread, args=(client_socket, client_addr, games)).start()
-            threads.append(t)
-        except KeyboardInterrupt as e:
-            shouldRunning = False
-            break
-
-    # clean-ups
-    for thread in threads:
-       thread.join() # FIXME: cannot join game server discovery thread.. why?
-    server_socket.close()
 
 
 if __name__ == '__main__':
