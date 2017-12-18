@@ -12,8 +12,6 @@ from sudoku.GUI.EnterServerAddressDialog import EnterServerAddressDialog
 from sudoku.GUI.Gameplay import *
 from sudoku.GUI.EnterNicknameDialog import *
 from sudoku.GUI.MultiplayerGameDialog import *
-from sudoku.common import protocol
-from sudoku.common.protocol import HOST, PORT
 
 
 class ClientGUI:
@@ -40,11 +38,12 @@ class ClientGUI:
     #         return pickle.loads(rsp)
 
     def update(self, gui, row, col, value, session):
-        self.proxy.update()
+        change = self.proxy.update(row, col, value)
+        gui.update(change)
 
     def create_session(self, game_name, max_num_players):
         # print("create session")
-        self.proxy.create_session(game_name, max_num_players)
+        return self.proxy.create_session(game_name, max_num_players)
         # new_session = self.send_request(protocol._REQ_CREATE_SESSION + protocol._MSG_FIELD_SEP +
         #                                 game_name + protocol._MSG_FIELD_SEP + max_num_players)
         # return new_session
@@ -55,20 +54,21 @@ class ClientGUI:
         # return current_sessions
 
     def nickname(self, n):
-        self.name = self.proxy.nickname(n)
+        self.proxy.nickname(n)
+        self.name = n
 
     def connect(self):
         self.proxy.connect()
         # self.send_request(protocol._REQ_INITIAL_CONNECT)
 
     def join_session(self, session_id):
-        self.proxy.join_session(session_id)
+        rsp = self.proxy.join_session(session_id)
         # print("join the session")
         # rsp = self.send_request(protocol._REQ_JOIN_SESSION + protocol._MSG_FIELD_SEP + str(session_id))
-        # if type(rsp) != bool:
-        #     return rsp
-        # else:
-        #     return 'session full'
+        if type(rsp) != bool:
+            return rsp
+        else:
+            return 'session full'
 
     def process_response(self, m):
         pass
@@ -88,7 +88,7 @@ def client_gui_main(args=None):
     if m.session:
         gameplayGUI = Gameplay(addressGUI.address, m.session, client)
     else:
-        print("session is empty -- probably from multiplayerdiaglo")
+        print("session is empty -- probably from multiplayerdialog")
 
 
 if __name__ == '__main__':

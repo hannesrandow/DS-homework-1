@@ -50,6 +50,7 @@ class Server(ThreadingMixIn, SimpleXMLRPCServer):
         self.start_main()
 
     def start_main(self):
+        global shouldRunning,
         try:
             self.server.serve_forever()
         except KeyboardInterrupt:
