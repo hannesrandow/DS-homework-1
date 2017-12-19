@@ -13,11 +13,14 @@ from sudoku.GUI.Gameplay import *
 from sudoku.GUI.EnterNicknameDialog import *
 from sudoku.GUI.MultiplayerGameDialog import *
 
+address = None
+
 
 class ClientGUI:
     def __init__(self, args):
         self.sock = socket(AF_INET, SOCK_STREAM)
         self.name = None
+        self.player = None
         self.client_ip = None
         server = (args.server_addr, int(args.port))
         self.proxy = ServerProxy("https://%s:%d" % server, allow_none=True)
@@ -38,12 +41,12 @@ class ClientGUI:
     #         return pickle.loads(rsp)
 
     def update(self, gui, row, col, value, session):
-        change = self.proxy.update(row, col, value)
+        change = self.proxy.update(self.player, row, col, value)
         gui.update(change)
 
     def create_session(self, game_name, max_num_players):
         # print("create session")
-        return self.proxy.create_session(game_name, max_num_players)
+        return self.proxy.create_session(self.player, game_name, max_num_players)
         # new_session = self.send_request(protocol._REQ_CREATE_SESSION + protocol._MSG_FIELD_SEP +
         #                                 game_name + protocol._MSG_FIELD_SEP + max_num_players)
         # return new_session
@@ -54,15 +57,15 @@ class ClientGUI:
         # return current_sessions
 
     def nickname(self, n):
-        self.proxy.nickname(n)
+        self.proxy.nickname(self.player, n)
         self.name = n
 
     def connect(self):
-        self.proxy.connect()
+        self.player = self.proxy.connect(address)
         # self.send_request(protocol._REQ_INITIAL_CONNECT)
 
     def join_session(self, session_id):
-        rsp = self.proxy.join_session(session_id)
+        rsp = self.proxy.join_session(self.player, session_id)
         # print("join the session")
         # rsp = self.send_request(protocol._REQ_JOIN_SESSION + protocol._MSG_FIELD_SEP + str(session_id))
         if type(rsp) != bool:
@@ -79,6 +82,7 @@ def client_gui_main(args=None):
 
     nicknameGUI = EnterNicknameDialog()
     addressGUI = EnterServerAddressDialog(client)
+    address = addressGUI.address
     client.connect()
     client.nickname(nicknameGUI.nickname)
     # Done: use Multiplayer Game Dialog to join existing session or create a new one
@@ -86,7 +90,7 @@ def client_gui_main(args=None):
     # print("session created")
 
     if m.session:
-        gameplayGUI = Gameplay(addressGUI.address, m.session, client)
+        gameplayGUI = Gameplay(address, m.session, client)
     else:
         print("session is empty -- probably from multiplayerdialog")
 

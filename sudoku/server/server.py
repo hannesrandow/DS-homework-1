@@ -32,7 +32,7 @@ class Server(ThreadingMixIn, SimpleXMLRPCServer):
         global shouldRunning
         self.threads = []
         # handle links with thread
-        t = threading.Thread(target=handle_link_backs, args=(games,)).start()
+        t = threading.Thread(target=handle_link_backs, args=(self.games,)).start()
         self.threads.append(t)
 
         # game server discovery beacon
@@ -50,7 +50,7 @@ class Server(ThreadingMixIn, SimpleXMLRPCServer):
         self.start_main()
 
     def start_main(self):
-        global shouldRunning,
+        global shouldRunning
         try:
             self.server.serve_forever()
         except KeyboardInterrupt:
@@ -61,33 +61,75 @@ class Server(ThreadingMixIn, SimpleXMLRPCServer):
         print "Terminating..."
         return
 
-    def leave_session(self):
+    def leave_session(self, player):
+        player.close()
+        print("client link back closed")
+
+        # update list of players
+        if player and player.current_session_id:
+            current_game = self.games.get_session(player.current_session_id)
+            current_game.current_players.remove(player)  # remove player from his session
+            # check on the status of the game if only one player is left -> game completed
+            if len(current_game.current_players) == 1:
+                current_game.game_status = protocol._COMPLETED
+                for other_player in current_game.current_players:
+                    other_player.send_game_updates(current_game)
+                    print "only one player left -> game ends for : ", other_player.nickname
+
+            current_players.remove(player)  # remove player from current_players list
+            print("current_players list being updated..")
+            player = None
+        else:
+            print("player object is none [weird!!]")
+
         self.games.leave_session()
 
-    def update(self):
-        # TODO: my_session = self.games.get_session(s)
-        pass
+    def update(self, player, row, col, val):
+        s = player.current_session_id
+        my_session = self.games.get_session(s)
 
-    def create_session(self, game_name, num_players):
-        # TODO: self.games.new_session()
-        pass
+        if my_session:
+            correct = my_session.update_game(player, row, col, val)
+        else:
+            print("error: no session with id %d found!" % s)
+
+        print my_session.game_state
+
+        # send to other players of the same session
+        for other_player in my_session.current_players:
+            if other_player != player:
+                other_player.send_game_updates(my_session)
+                print "[based a game update rqst] game updates sent to ", other_player.nickname
+
+        return (my_session, correct)
+
+    def create_session(self, current_player, game_name, num_players):
+        return self.games.new_session(current_player, game_name, num_players)
 
     def get_current_sessions(self):
         return self.games.get_sessions()
 
-    def nickname(self, n):
-        # TODO: don't know what to do here
-        pass
+    def nickname(self, player, n):
+        player.nickname = n
 
-    def connect(self):
-        self.games.join_session()
-        return
+    def connect(self, address):
+        # self.games.join_session()
+        player = Player(address)
+        current_players.append(player)
+        return player
 
 
-    def join_session(self, session_id):
-        self.games.join_session(session_id)
+    def join_session(self, player, session_id):
+        joined_session = self.games.join_session(player, session_id)
+        for other_player in joined_session.current_players:
+            # TODO: exlude the current player that upated the game!
+            # if other_player != player:
+            other_player.send_game_updates(joined_session)
+            print "[based a join rqst] game updates sent to : ", other_player.nickname
+        return joined_session
 
-# following should not be necessary thanks to ThreadingMixIn
+
+        # following should not be necessary thanks to ThreadingMixIn
         # while True:  # grand loop of the server
         #     try:
         #         client_socket, client_addr = self.server_socket.accept()
@@ -101,6 +143,7 @@ class Server(ThreadingMixIn, SimpleXMLRPCServer):
         for thread in self.threads:
             thread.join()  # FIXME: cannot join game server discovery thread.. why?
         self.server_socket.close()
+
 
 class GamesHandler:
     """
@@ -123,19 +166,17 @@ class GamesHandler:
                 return False
         return True
 
-    def new_session(self, information, current_player):
+    def new_session(self, current_player, game_name, num_of_players):
         """
         This method is called when a user creates a new session.
         :param information: Contains the name that the user gave to the game.
         :param current_player: The player that created the session.
         :return: The newly created session.
         """
-        game_name = information.split(protocol._MSG_FIELD_SEP)[1]
 
         # if not self.__is_name_valid(game_name):
         #     return None # TODO: be more informative on reasons to client
 
-        max_num_of_players = information.split(protocol._MSG_FIELD_SEP)[2]
         # if max_num_of_players < 1 or max_num_of_players > 100:
         #     return None # TODO: be more informative to client
 
@@ -146,7 +187,7 @@ class GamesHandler:
                           self.sudoku_sol,
         #                  'sudoku/puzzles/sudoku_easy_1.csv',
         #                  'sudoku/puzzles/sudoku_easy_1_solution.csv',
-                          max_num_of_players,
+                          num_of_players,
                           [current_player])
         session.game_start()
 
@@ -155,18 +196,13 @@ class GamesHandler:
         self.__lock.release()
         return session
 
-    def join_session(self, information, player):
+    def join_session(self, player, req_ses_id):
         """
         This method gets called when a user reqeusts to join an already up and running session.
         :param information: Contains the id of the session that the user wants to join.
         :param player: The player instance representing the user that wants to join the session
         :return: The session that was joined, if the maximum number of players was not reached yet. None otherwise.
         """
-        try: # if input of int() is not convertible to integer it throws an error
-            req_ses_id = int(information.split(protocol._MSG_FIELD_SEP)[1])
-        except ValueError:
-            print("session id is not int convertible: %s" % information.split(protocol._MSG_FIELD_SEP))
-            return # TODO: appropriate error to user
 
         for session in self.current_sessions:
             if session.game_id == req_ses_id:
@@ -211,120 +247,6 @@ class GamesHandler:
         :return: Number of sessions currently running.
         """
         return len(self.current_sessions)
-
-
-def client_thread(sock, addr, games):
-    """
-    Handles the all the requests a client makes to the server.
-    :param sock: Client socket.
-    :param addr: Client address.
-    :param games: A gameshandler.
-    :return: None
-    """
-    print 'created new thread for client', addr
-
-    global shouldRunning
-    player = None
-    # TODO: maybe it's better to use a hash of clients IP:PORT for that!!
-    while shouldRunning:
-        sleep(1)
-        try:
-            header = sock.recv(recv_buffer_length)
-            if header == '':
-                break
-            if protocol.server_process(header) == protocol._SA_NEW_PLAYER:
-                player = Player(addr)
-                # players.add_player(id = hash(threading.current_thread()))
-                current_players.append(player)
-                sock.send(protocol._ACK)
-
-            elif protocol.server_process(header) == protocol._SA_NICKNAME:
-                player.nickname = header.split(protocol._MSG_FIELD_SEP)[1]
-                sock.send(protocol._ACK)
-
-            elif protocol.server_process(header) == protocol._SA_CREATE_SESSION:
-                # information = client_socket.recv(recv_buffer_length)
-                created_session = games.new_session(header, player)
-                pickle_session = pickle.dumps(created_session)
-                sock.send(pickle_session)
-
-            elif protocol.server_process(header) == protocol._SA_JOIN_SESSION:
-                joined_session = games.join_session(header, player)
-                if joined_session:
-                    pickle_session = pickle.dumps(joined_session)
-                    sock.send(pickle_session)
-                else:
-                    sock.send(protocol._RSP_SESSION_FULL)
-
-                for other_player in joined_session.current_players:
-                    # TODO: exlude the current player that upated the game!
-                    # if other_player != player:
-                    other_player.send_game_updates(joined_session)
-                    print "[based a join rqst] game updates sent to : ", other_player.nickname
-
-            elif protocol.server_process(header) == protocol._SA_CURRENT_SESSIONS:
-                pickle_current_sessions = pickle.dumps(games.get_sessions())
-                sock.send(pickle_current_sessions)
-
-            elif protocol.server_process(header) == protocol._SA_UPDATE_GAME:
-                print(header)
-                # TODO: update Score - player.updateScore(header_part2)
-                # TODO: give in the game_id
-                s = player.current_session_id
-                my_session = games.get_session(s)
-
-                if my_session:
-                    correct = my_session.update_game(header, player)
-                else:
-                    print("error: no session with id %d found!" % s)
-                    continue
-
-                print my_session.game_state
-
-                pickle_session = pickle.dumps((my_session, correct))
-                sock.send(pickle_session)
-                # send to other players of the same session
-                for other_player in my_session.current_players:
-                    if other_player != player:
-                        other_player.send_game_updates(my_session)
-                        print "[based a game update rqst] game updates sent to ", other_player.nickname
-
-
-            elif header == protocol._TERMINATOR:
-                break
-        except KeyboardInterrupt as e:
-            break
-        except Exception as e:
-            print("Exception for client", addr)
-            print(e)
-            print("continue processing..")
-            continue
-
-    # if reached here then connection had to be terminated
-    print("closing session for client", player.client_ip)
-    sock.close()
-    print("socket closed")
-    player.close()
-    print("client link back closed")
-
-    # update list of players
-    if player and player.current_session_id:
-        current_game = games.get_session(player.current_session_id)
-        current_game.current_players.remove(player)  # remove player from his session
-        # check on the status of the game if only one player is left -> game completed
-        if len(current_game.current_players) == 1:
-            current_game.game_status = protocol._COMPLETED
-            for other_player in current_game.current_players:
-                other_player.send_game_updates(current_game)
-                print "only one player left -> game ends for : ", other_player.nickname
-
-        current_players.remove(player)  # remove player from current_players list
-        print("current_players list being updated..")
-        player = None
-    else:
-        print("player object is none [weird!!]")
-
-
 
 
 def handle_link_backs(games):

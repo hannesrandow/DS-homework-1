@@ -1,3 +1,6 @@
+from abc import abstractmethod
+
+
 class ClientSession(Client):
 
     def __init(self, game_state, game_id, game_name, game_solution, maximum_num_of_players, score):
@@ -9,6 +12,6 @@ class ClientSession(Client):
         self.score = score
     
     @abstractmethod
-    def update_game():
+    def update_game(self):
         pass
     

@@ -29,15 +29,15 @@ class Game(object):
                 game.append(row)
         return game
 
-    def update_game():
+    def update_game(self):
         pass
 
     def game_start(self):
         self.game_state = self.read_game(self.new_game_path)
         self.game_solution = self.read_game(self.game_solution_path)
 
-    def game_finish():
+    def game_finish(self):
         pass
 
-    def terminate_session():
+    def terminate_session(self):
         pass

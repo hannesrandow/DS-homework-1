@@ -47,10 +47,10 @@ class Session(object):
                 game.append(row)
         return game
     
-    def update_game(self, information, player):
+    def update_game(self, player, row, col, val):
         """
         This method gets calles when a user makes an update to the current game.
-        :param information: The row & column that the user wants to modify, as well as the number he wants to insert.
+        :param information: The row & col that the user wants to modify, as well as the number he wants to insert.
         :param player: THe player that wants to make the change
         :return: Boolean value that indicates whether the requested change was correct or incorrect.
         """
@@ -68,15 +68,10 @@ class Session(object):
             else:
                 self.current_players[index_of_updating_player].score -= 1
         
-        information = information.split(':')
-        row = int(information[1])
-        column = int(information[2])
-        number = int(information[3])
-        
         correct = False
-        if self.game_state[row][column] == 0:
-            if self.game_solution[row][column] == number:
-                self.game_state[row][column] = number
+        if self.game_state[row][col] == 0:
+            if self.game_solution[row][col] == val:
+                self.game_state[row][col] = val
                 correct = True
         if self.game_state == self.game_solution:
             self.game_status = protocol._COMPLETED
