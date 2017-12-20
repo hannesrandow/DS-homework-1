@@ -46,13 +46,19 @@ class GameServerDiscovery(threading.Thread):
                 continue
         self._thread_stopped = True
 
-    def get_list(self):
+    def get_list(self, popup, progress_var):
         """ return servers that were alive at least in the past 10 seconds - might return empty list"""
 
         # give it a time to discover something
-        if (time()-self.start_timestamp) < 5:
+        tic = time()
+        progress = 0
+        progress_step = 100 / 5
+        while (time()-tic) < 5:
             # print("too soon")
-            sleep(5)
+            popup.update()
+            progress += progress_step
+            progress_var.set(progress)
+            sleep(1)
 
         available_servers = []
         self.lock.acquire()
