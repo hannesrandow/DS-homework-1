@@ -40,27 +40,6 @@ class Server(ThreadingMixIn, SimpleXMLRPCServer):
         t = threading.Thread(target=game_server_beacon, args=(interval,)).start()
         self.threads.append(t)
 
-        # Initilize RPC service on specific port
-        self.server_sock = (args.laddr, int(args.port))
-        self.server = SimpleXMLRPCServer(self.server_sock, requestHandler=SimpleXMLRPCRequestHandler, allow_none=True)
-        # Register server-side functions into RPC middleware
-        self.server.register_introspection_functions()
-        self.server.register_instance(self)
-        # Start the main thread now
-        self.start_main()
-
-    def start_main(self):
-        global shouldRunning
-        try:
-            self.server.serve_forever()
-        except KeyboardInterrupt:
-            shouldRunning = False
-            print "Server interrupted by CTRL+C"
-        self.server.shutdown()
-        self.server.server_close()
-        print "Terminating..."
-        return
-
     def leave_session(self, player):
         player.close()
         print("client link back closed")
@@ -257,7 +236,7 @@ def handle_link_backs(games):
     """
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind((HOST, GAME_UPDATE_PORT))
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR | socket.SO_KEEPALIVE, 1)
+    # TODO: sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR | socket.SO_KEEPALIVE, 1)
 
     sock.listen(0)
     while shouldRunning:
@@ -293,7 +272,7 @@ def game_server_beacon(interval):
 
     while shouldRunning:
         sleep(interval)
-        sock.sendto(protocol.service_name, protocol.multicast_group)
+        # sock.sendto(protocol.service_name, protocol.multicast_group)
         # TODO: do LOG.debug
         print('[discovery] beep..')
         # print('send discovery packets to multicast group [%s]' % protocol.multicast_group[0])
@@ -305,9 +284,23 @@ def server_main(args=None):
     :param args: Arguments passed to server. Game
     :return: None
     """
-    Server(args)
+    game_server = Server(args)
+    # Initilize RPC service on specific port
+    server_sock = (args.laddr, int(args.port))
+    server = SimpleXMLRPCServer(server_sock, requestHandler=SimpleXMLRPCRequestHandler, allow_none=True)
+    # Register server-side functions into RPC middleware
+    server.register_introspection_functions()
+    server.register_instance(game_server)
 
-
+    global shouldRunning
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        shouldRunning = False
+        print "Server interrupted by CTRL+C"
+    server.shutdown()
+    server.server_close()
+    print "Terminating..."
 
 if __name__ == '__main__':
     server_main()
