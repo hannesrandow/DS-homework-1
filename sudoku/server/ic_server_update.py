@@ -22,6 +22,10 @@ class ICServerUpdate:
         self.users.append(username)
         return
 
+    def remove_user(self, username):
+        self.users.remove(username)
+        return
+
     def publish_update(self, update):
         update = pickle.dumps(update)
         print('published update')

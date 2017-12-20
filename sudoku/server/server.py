@@ -14,6 +14,7 @@ from sudoku.server.player import Player
 from sudoku.common import protocol
 from sudoku.common.protocol import HOST, PORT
 from sudoku.common.session import Session
+from sudoku.server.ic_server_update import ICServerUpdate
 
 client_addr_sockets = []
 
@@ -248,6 +249,7 @@ def client_thread(sock, addr, games):
 
 def handle_link_backs(games):
     """
+    Becomes redundant through publish/subscribe pattern
     This method takes care of the link backs, which are used to send the session to the client.
     :param games: A gameshandler
     :return: None
