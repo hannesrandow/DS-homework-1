@@ -4,6 +4,7 @@ This script handles all the actions the client can make and communicates with th
 
 
 import pickle
+import pika
 from socket import AF_INET, SOCK_STREAM, socket
 from time import sleep
 
