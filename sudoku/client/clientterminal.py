@@ -2,24 +2,19 @@
 This script handles all the actions the client can make and communicates with the server from the terminal.
 """
 
-
 import pickle
-from socket import AF_INET, SOCK_STREAM, socket
 from time import sleep
 
+from sudoku.client.game_server_discovery import GameServerDiscovery
+from sudoku.client.rpc_client import RpcClient
 from sudoku.common import protocol
-from sudoku.common.protocol import HOST, PORT
-from sudoku.client.game_update_link import GameUpdateLink
 
 
 class ClientTerminal:
     def __init__(self):
-        self.gameUpdateLink = GameUpdateLink()
-        self.socket = socket(AF_INET, SOCK_STREAM)
-        self.socket.connect((HOST, PORT))
         self.current_session = None
         self.client_specifier = "default"  # used by server to distinguish clients for matching up link backs
-        # TODO: maybe it's better to use hash of client's IP:PORT!!
+        self.rpcClient = None
 
     def leave_session(self):
         # self.gameUpdateLink.destroy()
@@ -70,8 +65,12 @@ class ClientTerminal:
         :param max_num_players: The maximum number of players that can be in the session.
         :return: The created session, from the server.
         """
-        new_session = self.send_request(protocol._REQ_CREATE_SESSION + protocol._MSG_FIELD_SEP +
+        # new_session = self.send_request(protocol._REQ_CREATE_SESSION + protocol._MSG_FIELD_SEP +
+        #                                 game_name + protocol._MSG_FIELD_SEP + max_num_players)
+
+        new_session = self.rpcClient.call(protocol._REQ_CREATE_SESSION + protocol._MSG_FIELD_SEP +
                                         game_name + protocol._MSG_FIELD_SEP + max_num_players)
+
         return new_session
 
     def get_current_sessions(self):
@@ -79,7 +78,9 @@ class ClientTerminal:
         Allows the user to view all the sessions that are currently running on the server.
         """
         #get current sessions from server
-        current_sessions = self.send_request(protocol._REQ_CURRENT_SESSIONS)
+        current_sessions = self.rpcClient.call(protocol._REQ_CURRENT_SESSIONS)
+        current_sessions = pickle.loads(current_sessions)
+
         for session in current_sessions:
             print
             '------------------ SESSION ---------------------'
@@ -96,15 +97,32 @@ class ClientTerminal:
         :param n: The desired nickname/username
         :return: None
         """
-        self.send_request(protocol._REQ_NICKNAME + protocol._MSG_FIELD_SEP + n)
+        # self.send_request(protocol._REQ_NICKNAME + protocol._MSG_FIELD_SEP + n)
+        res = self.rpcClient.call(protocol._REQ_NICKNAME + protocol._MSG_FIELD_SEP + n)
+        print(res)
+        if res == protocol._ACK:
+            print("nickname accepted")
+        else:
+            print("nickname did not accepted!")
         return
 
-    def connect(self):
+    def connect(self, serv_addr='localhost'):
         """
         This method is called for the initial connect between the client and the server.
         :return: None
         """
-        self.send_request(protocol._REQ_INITIAL_CONNECT)
+        # self.send_request(protocol._REQ_INITIAL_CONNECT)
+        try:
+            self.rpcClient = RpcClient(serv_addr)
+        except Exception as e:
+            print('could not establish connected with the RabbitMQ server: %s' % e)
+            exit(-1)
+
+        res = self.rpcClient.call(protocol._REQ_INITIAL_CONNECT)
+        if res == protocol._ACK:
+            print("connected successfuly!")
+        else:
+            print("some problem with connection!")
         return
 
     def join_session(self, user_action):
@@ -147,7 +165,6 @@ class ClientTerminal:
             # current_session = create_session('test_game', '5')
             user_input = user_action.split(' ')
             self.current_session = self.create_session(user_input[1], user_input[2])
-            self.gameUpdateLink.create(self.socket.getsockname())
             # print 'new session created'
         elif user_action.startswith('-printsession'):
             #if not self.current_session:
@@ -195,8 +212,17 @@ class ClientTerminal:
 
 
 def client_terminal_main(args=None):
+    serv_addr = raw_input("Enter server address (or 'auto'): ")
+    if serv_addr == 'auto':
+        game_server_discovery = GameServerDiscovery()
+        print("found: ", game_server_discovery.get_list())
+        serv_addr = game_server_discovery.get_list().pop(0)
+        game_server_discovery.stop()
+    print("connecting to %s .." % serv_addr)
+
     client = ClientTerminal()
-    client.connect()
+    client.connect(serv_addr)
+    # FIXME: some considerations required for rabbitmq for remote ip connection: http://bit.ly/2z4lwZY
 
     while True:
         sleep(1)

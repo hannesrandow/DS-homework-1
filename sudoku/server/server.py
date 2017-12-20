@@ -6,19 +6,17 @@ import pickle
 import socket
 import threading
 from time import sleep
-
 import struct
-
-from sudoku.common.protocol import GAME_UPDATE_PORT
 from sudoku.server.player import Player
 from sudoku.common import protocol
-from sudoku.common.protocol import HOST, PORT
 from sudoku.common.session import Session
+from sudoku.server.rpc_server import RpcServer
 
 client_addr_sockets = []
 
 recv_buffer_length = 1024
-current_players = []    # just for having a list of active players on server (no particular use!)
+global current_players
+current_players = {}
 shouldRunning = True    # a global variable for threads to know when to finish their loop
 
 class GamesHandler:
@@ -132,150 +130,110 @@ class GamesHandler:
         return len(self.current_sessions)
 
 
-def client_thread(sock, addr, games):
-    """
-    Handles the all the requests a client makes to the server.
-    :param sock: Client socket.
-    :param addr: Client address.
-    :param games: A gameshandler.
-    :return: None
-    """
-    print 'created new thread for client', addr
+def request_handler(msg, uuid, args):
+    print 'handle client %s request', uuid
+    games = args[0] # FIXME: do something like we get from thread.Thread.create(args=)
+    global current_players
 
-    global shouldRunning
-    player = None
-    # TODO: maybe it's better to use a hash of clients IP:PORT for that!!
-    while shouldRunning:
-        sleep(1)
-        try:
-            header = sock.recv(recv_buffer_length)
-            if header == '':
-                break
-            if protocol.server_process(header) == protocol._SA_NEW_PLAYER:
-                player = Player(addr)
-                # players.add_player(id = hash(threading.current_thread()))
-                current_players.append(player)
-                sock.send(protocol._ACK)
+    try:
+        if msg == '':
+            return
 
-            elif protocol.server_process(header) == protocol._SA_NICKNAME:
-                player.nickname = header.split(protocol._MSG_FIELD_SEP)[1]
-                sock.send(protocol._ACK)
+        if protocol.server_process(msg) == protocol._SA_NEW_PLAYER:
+            print("NEW PLAYER RQST")
+            current_players[uuid] = Player(uuid)
+            return protocol._ACK
 
-            elif protocol.server_process(header) == protocol._SA_CREATE_SESSION:
-                # information = client_socket.recv(recv_buffer_length)
-                created_session = games.new_session(header, player)
+        elif protocol.server_process(msg) == protocol._SA_NICKNAME:
+            print("NICKNAME RQST")
+            if uuid in current_players.keys():
+                player = current_players[uuid]
+                player.nickname = msg.split(protocol._MSG_FIELD_SEP)[1]
+                return protocol._ACK
+            else:
+                return False
+
+        elif protocol.server_process(msg) == protocol._SA_CREATE_SESSION:
+            print("CREATE SESSION RQST")
+            if uuid in current_players.keys():
+                player = current_players[uuid]
+                created_session = games.new_session(msg, player)
                 pickle_session = pickle.dumps(created_session)
-                sock.send(pickle_session)
+                return pickle_session
+            else:
+                return False
 
-            elif protocol.server_process(header) == protocol._SA_JOIN_SESSION:
-                joined_session = games.join_session(header, player)
-                if joined_session:
-                    pickle_session = pickle.dumps(joined_session)
-                    sock.send(pickle_session)
-                else:
-                    sock.send(protocol._RSP_SESSION_FULL)
+        elif protocol.server_process(msg) == protocol._SA_JOIN_SESSION:
+            print("JOIN SESSION RQST")
+        #
+        #     joined_session = games.join_session(msg, player)
+        #     if joined_session:
+        #         pickle_session = pickle.dumps(joined_session)
+        #         sock.send(pickle_session)
+        #     else:
+        #         sock.send(protocol._RSP_SESSION_FULL)
+        #
+        #     for other_player in joined_session.current_players:
+        #         # TODO: exlude the current player that upated the game!
+        #         # if other_player != player:
+        #         other_player.send_game_updates(joined_session)
+        #         print "[based a join rqst] game updates sent to : ", other_player.nickname
+        #
+        elif protocol.server_process(msg) == protocol._SA_CURRENT_SESSIONS:
+            print("GET CURRENT SESSIONS RQST")
+            return pickle.dumps(games.get_sessions())
 
-                for other_player in joined_session.current_players:
-                    # TODO: exlude the current player that upated the game!
-                    # if other_player != player:
-                    other_player.send_game_updates(joined_session)
-                    print "[based a join rqst] game updates sent to : ", other_player.nickname
+        elif protocol.server_process(msg) == protocol._SA_UPDATE_GAME:
+            print("GAME UPDATE RQST")
+        #     print(msg)
+        #     # TODO: update Score - player.updateScore(header_part2)
+        #     # TODO: give in the game_id
+        #     s = player.current_session_id
+        #     my_session = games.get_session(s)
+        #
+        #     if my_session:
+        #         correct = my_session.update_game(msg, player)
+        #     else:
+        #         print("error: no session with id %d found!" % s)
+        #         return
+        #
+        #     print my_session.game_state
+        #
+        #     pickle_session = pickle.dumps((my_session, correct))
+        #     sock.send(pickle_session)
+        #     # send to other players of the same session
+        #     for other_player in my_session.current_players:
+        #         if other_player != player:
+        #             other_player.send_game_updates(my_session)
+        #             print "[based a game update rqst] game updates sent to ", other_player.nickname
+        elif msg == protocol._TERMINATOR:
+            return
+    except Exception as e:
+        print("some error happened in server request handler: %s", e)
 
-            elif protocol.server_process(header) == protocol._SA_CURRENT_SESSIONS:
-                pickle_current_sessions = pickle.dumps(games.get_sessions())
-                sock.send(pickle_current_sessions)
-
-            elif protocol.server_process(header) == protocol._SA_UPDATE_GAME:
-                print(header)
-                # TODO: update Score - player.updateScore(header_part2)
-                # TODO: give in the game_id
-                s = player.current_session_id
-                my_session = games.get_session(s)
-
-                if my_session:
-                    correct = my_session.update_game(header, player)
-                else:
-                    print("error: no session with id %d found!" % s)
-                    continue
-
-                print my_session.game_state
-
-                pickle_session = pickle.dumps((my_session, correct))
-                sock.send(pickle_session)
-                # send to other players of the same session
-                for other_player in my_session.current_players:
-                    if other_player != player:
-                        other_player.send_game_updates(my_session)
-                        print "[based a game update rqst] game updates sent to ", other_player.nickname
-
-
-            elif header == protocol._TERMINATOR:
-                break
-        except KeyboardInterrupt as e:
-            break
-        except Exception as e:
-            print("Exception for client", addr)
-            print(e)
-            print("continue processing..")
-            continue
-
+    # TODO: detect whether a client is disconnected
+    # TODO: remove clients if they are disconnected or requested for disconnection
     # if reached here then connection had to be terminated
-    print("closing session for client", player.client_ip)
-    sock.close()
-    print("socket closed")
-    player.close()
-    print("client link back closed")
+    # print("socket closed")
+    # player.close()
+    # print("client link back closed")
 
     # update list of players
-    if player and player.current_session_id:
-        current_game = games.get_session(player.current_session_id)
-        current_game.current_players.remove(player)  # remove player from his session
-        # check on the status of the game if only one player is left -> game completed
-        if len(current_game.current_players) == 1:
-            current_game.game_status = protocol._COMPLETED
-            for other_player in current_game.current_players:
-                other_player.send_game_updates(current_game)
-                print "only one player left -> game ends for : ", other_player.nickname
-
-        current_players.remove(player)  # remove player from current_players list
-        print("current_players list being updated..")
-        player = None
-    else:
-        print("player object is none [weird!!]")
-
-
-
-
-def handle_link_backs(games):
-    """
-    This method takes care of the link backs, which are used to send the session to the client.
-    :param games: A gameshandler
-    :return: None
-    """
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind((HOST, GAME_UPDATE_PORT))
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR | socket.SO_KEEPALIVE, 1)
-
-    sock.listen(0)
-    while shouldRunning:
-        client_sock, client_addr = sock.accept()
-        player_id = client_sock.recv(1000)
-        id = pickle.loads(player_id)
-
-        found = False
-        for sess in games.current_sessions:
-            if found:
-                break
-            for p in sess.current_players:
-                if p.client_ip == id:
-                    p.link_back_sock = client_sock
-                    found = True
-                    print("link back established with player_id: ", player_id)
-                    break
-        if not found:
-            print("no player with id \"%s\" could be matched for link back!" % player_id)
-        # TODO: send fail or success
-    print("link back checker on threading side got dismissed!!!")
+    # if player and player.current_session_id:
+    #     current_game = games.get_session(player.current_session_id)
+    #     current_game.current_players.remove(player)  # remove player from his session
+    #     # check on the status of the game if only one player is left -> game completed
+    #     if len(current_game.current_players) == 1:
+    #         current_game.game_status = protocol._COMPLETED
+    #         for other_player in current_game.current_players:
+    #             other_player.send_game_updates(current_game)
+    #             print "only one player left -> game ends for : ", other_player.nickname
+    #
+    #     current_players.remove(player)  # remove player from current_players list
+    #     print("current_players list being updated..")
+    #     player = None
+    # else:
+    #     print("player object is none [weird!!]")
 
 
 def game_server_beacon(interval):
@@ -302,40 +260,28 @@ def server_main(args=None):
     :param args: Arguments passed to server. Game
     :return: None
     """
-
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((HOST, PORT))
-    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    backlog = 0
-    # server_socket.listen(backlog)
-
     games = GamesHandler(args)
     global shouldRunning
     threads = []
-    # handle links with thread
-    t = threading.Thread(target=handle_link_backs, args=(games,)).start()
-    threads.append(t)
 
     # game server discovery beacon
     interval = 2   # 2 secs discovery_signal_interval
     t = threading.Thread(target=game_server_beacon, args=(interval,)).start()
     threads.append(t)
 
-    server_socket.listen(backlog)
-    while True:  # grand loop of the server
+    # handling client requests
+    rpcServer = RpcServer(request_handler=request_handler, handler_args=(games,))
+
+    while True:
         try:
-            client_socket, client_addr = server_socket.accept()
-            t = threading.Thread(target=client_thread, args=(client_socket, client_addr, games)).start()
-            threads.append(t)
-        except KeyboardInterrupt as e:
-            shouldRunning = False
+            sleep(1)
+        except (KeyboardInterrupt, SystemExit):
+            # clean-ups
+            if threads:
+                for thread in threads:
+                    thread.join()  # FIXME: cannot join game server discovery thread.. why?
             break
-
-    # clean-ups
-    for thread in threads:
-       thread.join() # FIXME: cannot join game server discovery thread.. why?
-    server_socket.close()
-
+    print("server ends.")
 
 if __name__ == '__main__':
     server_main()
