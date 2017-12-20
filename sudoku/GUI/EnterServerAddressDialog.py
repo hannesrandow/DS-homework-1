@@ -80,3 +80,96 @@ class EnterServerAddressDialog:
         # at first clear entry
         self.entryAddress.delete(0, 'end')
         self.entryAddress.insert(0, self.serverList.get(ACTIVE))
+
+
+    def auto_discovery(self):
+        # start progress bar
+        popup = Tkinter.Toplevel()
+        Tkinter.Label(popup, text="Looking for server(s)..").grid(row=0, column=0)
+
+        popup.grab_set()
+        progress_var = Tkinter.DoubleVar()
+        progress_bar = ttk.Progressbar(popup, variable=progress_var, maximum=100)
+        progress_bar.grid(row=1, column=0)  # .pack(fill=tk.X, expand=1, side=tk.BOTTOM)
+        popup.pack_slaves()
+
+        game_server_discovery = GameServerDiscovery()
+        discovered = game_server_discovery.get_list(popup, progress_var)
+        game_server_discovery.stop()
+        popup.grab_release()
+        popup.destroy()
+        self.serverList.delete(0, END)
+        for item in discovered:
+            self.serverList.insert(END, item)
+
+    def select_server_from_list_on_double_click(self, event):
+        '''
+        double click on list element updates the name entry
+        :param event: double click event on list
+        :return: None
+        '''
+        # at first clear entry
+        self.entryAddress.delete(0, 'end')
+        self.entryAddress.insert(0, self.serverList.get(ACTIVE))
+
+
+    def auto_discovery(self):
+        # start progress bar
+        popup = Tkinter.Toplevel()
+        Tkinter.Label(popup, text="Looking for server(s)..").grid(row=0, column=0)
+
+        popup.grab_set()
+        progress_var = Tkinter.DoubleVar()
+        progress_bar = ttk.Progressbar(popup, variable=progress_var, maximum=100)
+        progress_bar.grid(row=1, column=0)  # .pack(fill=tk.X, expand=1, side=tk.BOTTOM)
+        popup.pack_slaves()
+
+        game_server_discovery = GameServerDiscovery()
+        discovered = game_server_discovery.get_list(popup, progress_var)
+        game_server_discovery.stop()
+        popup.grab_release()
+        popup.destroy()
+        self.serverList.delete(0, END)
+        for item in discovered:
+            self.serverList.insert(END, item)
+
+    def select_server_from_list_on_double_click(self, event):
+        '''
+        double click on list element updates the name entry
+        :param event: double click event on list
+        :return: None
+        '''
+        # at first clear entry
+        self.entryAddress.delete(0, 'end')
+        self.entryAddress.insert(0, self.serverList.get(ACTIVE))
+
+
+    def auto_discovery(self):
+        # start progress bar
+        popup = Tkinter.Toplevel()
+        Tkinter.Label(popup, text="Looking for server(s)..").grid(row=0, column=0)
+
+        popup.grab_set()
+        progress_var = Tkinter.DoubleVar()
+        progress_bar = ttk.Progressbar(popup, variable=progress_var, maximum=100)
+        progress_bar.grid(row=1, column=0)  # .pack(fill=tk.X, expand=1, side=tk.BOTTOM)
+        popup.pack_slaves()
+
+        game_server_discovery = GameServerDiscovery()
+        discovered = game_server_discovery.get_list(popup, progress_var)
+        game_server_discovery.stop()
+        popup.grab_release()
+        popup.destroy()
+        self.serverList.delete(0, END)
+        for item in discovered:
+            self.serverList.insert(END, item)
+
+    def select_server_from_list_on_double_click(self, event):
+        '''
+        double click on list element updates the name entry
+        :param event: double click event on list
+        :return: None
+        '''
+        # at first clear entry
+        self.entryAddress.delete(0, 'end')
+        self.entryAddress.insert(0, self.serverList.get(ACTIVE))
