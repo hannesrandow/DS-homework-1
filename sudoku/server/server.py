@@ -11,6 +11,7 @@ from sudoku.server.player import Player
 from sudoku.common import protocol
 from sudoku.common.session import Session
 from sudoku.server.rpc_server import RpcServer
+from sudoku.server.ic_server_update import ICServerUpdate
 
 client_addr_sockets = []
 
