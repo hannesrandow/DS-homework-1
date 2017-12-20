@@ -26,9 +26,9 @@ shouldRunning = True    # a global variable for threads to know when to finish t
 
 # ThreadingMixIn allows multithreading
 class Server(ThreadingMixIn, SimpleXMLRPCServer):
-    # TODO: include client_thread in here
     def __init__(self, args):
         self.games = GamesHandler(args)
+        self.game_state = None
         global shouldRunning
         self.threads = []
         # handle links with thread
@@ -39,6 +39,9 @@ class Server(ThreadingMixIn, SimpleXMLRPCServer):
         interval = 2  # 2 secs discovery_signal_interval
         t = threading.Thread(target=game_server_beacon, args=(interval,)).start()
         self.threads.append(t)
+
+    def get_game_state(self, player):
+        return self.game_state
 
     def leave_session(self, player):
         player.close()
@@ -58,6 +61,11 @@ class Server(ThreadingMixIn, SimpleXMLRPCServer):
             current_players.remove(player)  # remove player from current_players list
             print("current_players list being updated..")
             player = None
+
+            # clean-ups
+            for thread in self.threads:
+                thread.join()  # FIXME: cannot join game server discovery thread.. why?
+
         else:
             print("player object is none [weird!!]")
 
@@ -72,7 +80,8 @@ class Server(ThreadingMixIn, SimpleXMLRPCServer):
         else:
             print("error: no session with id %d found!" % s)
 
-        print my_session.game_state
+        self.game_state = my_session.game_state
+        print self.game_state
 
         # send to other players of the same session
         for other_player in my_session.current_players:
@@ -117,11 +126,6 @@ class Server(ThreadingMixIn, SimpleXMLRPCServer):
         #     except KeyboardInterrupt as e:
         #         shouldRunning = False
         #         break
-
-        # clean-ups
-        for thread in self.threads:
-            thread.join()  # FIXME: cannot join game server discovery thread.. why?
-        self.server_socket.close()
 
 
 class GamesHandler:

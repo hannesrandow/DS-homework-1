@@ -4,6 +4,8 @@ This script handles the GUI for the user and communicates with the server.
 
 
 import pickle
+import threading
+import time
 from socket import AF_INET, SOCK_STREAM, socket
 import time
 from xmlrpclib import ServerProxy
@@ -14,19 +16,37 @@ from sudoku.GUI.EnterNicknameDialog import *
 from sudoku.GUI.MultiplayerGameDialog import *
 
 address = None
+global running
+running = True
 
 
 class ClientGUI:
     def __init__(self, args):
         self.sock = socket(AF_INET, SOCK_STREAM)
+        self.current_game_state = None
         self.name = None
         self.player = None
         self.client_ip = None
         server = (args.server_addr, int(args.port))
         self.proxy = ServerProxy("https://%s:%d" % server, allow_none=True)
+        self.update_thread = threading.Thread(target=self.update_game_status_in_intervals)
+
+    def update_game_status_in_intervals(self):
+        # TODO: needs a lock to not update game state during "real update" (when number is entered)
+        global running
+        while running:
+            time.sleep(0.2)
+            updated_game_state = self.proxy.get_game_state()
+            if updated_game_state != self.current_game_state:
+                self.current_game_state = updated_game_state
+                # TODO: update gui somehow
+
 
     def leave_session(self):
         self.proxy.leave_session()
+        global running
+        running = False
+        self.update_thread.join()
         # Why was just a pass here before?
 
 # should not be necessary anymore
