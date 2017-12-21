@@ -67,8 +67,15 @@ class GamesHandler:
                           max_num_of_players,
                           [current_player])
         session.game_start()
+        # this is the publish/subscribe that is used to send updates to all clients in the game
+        ic_server_update = ICServerUpdate(game_name=game_name, session=session)
+
 
         self.__lock.acquire()
+        # Do we need to store all the ic_server_update instances somewhere?
+        # Probably not. The exchange has the same name as the game. Therefore if passing the name to the
+        # client, he can join that exchange.
+        #self.current_sessions.append((session, ic_server_update))
         self.current_sessions.append(session)
         self.__lock.release()
         return session

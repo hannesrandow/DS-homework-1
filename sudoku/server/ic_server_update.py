@@ -8,13 +8,13 @@ Here the server will send updates to the sudoku game to the clients that are sub
 class ICServerUpdate:
 
 
-    def __init__(self, game_name):
+    def __init__(self, game_name, session):
         self.game_name = game_name
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='127.0.0.1'))
         self.channel = self.connection.channel()
         self.channel.exchange_declare(exchange=self.game_name,
                                       exchange_type='fanout')
-        # self.channel.queue_declare(queue=self.name)
+        self.session = session
         print('Sudoku game %s running...' % self.game_name)
         self.users = []
 
