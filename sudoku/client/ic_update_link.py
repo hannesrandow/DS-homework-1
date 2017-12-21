@@ -1,8 +1,9 @@
 import pika
 import pickle
+import threading
 """
 Publish/subscribe scenario to receive updates to the game from the server.
-On client side
+On client side.
 """
 class ICUpdate_link:
 
@@ -27,7 +28,7 @@ class ICUpdate_link:
         self.main()
 
     def main(self):
-        print('Sudoku game %s running...' % self.game_name)
+        print('Sudoku game %s running on client...' % self.game_name)
         self.channel.start_consuming()
 
     def callback(self, ch, method, properties, game_session):
@@ -40,9 +41,12 @@ class ICUpdate_link:
         :param latest_game:
         :return: None
         """
-        self.latest_game = pickle.dumps(game_session)
+        self.latest_game = pickle.loads(game_session)
         if self.gui:  # call only for the gui version
             print("about to update gui")
             self.gui.update(self.latest_game)
+        else:
+            for row in self.latest_game.game_state:
+                print row
         return
 

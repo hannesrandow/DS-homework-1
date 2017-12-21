@@ -15,7 +15,7 @@ class ICServerUpdate:
         self.channel.exchange_declare(exchange=self.game_name,
                                       exchange_type='fanout')
         self.session = session
-        print('Sudoku game %s running...' % self.game_name)
+        print('Sudoku game %s running on server. Pub/Sub...' % self.game_name)
         self.users = []
 
     def add_user(self, username):
