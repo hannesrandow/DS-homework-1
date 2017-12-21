@@ -166,8 +166,9 @@ def request_handler(msg, uuid, args):
             if uuid in current_players.keys():
                 player = current_players[uuid]
                 created_session = games.new_session(msg, player)
-                pickle_session = pickle.dumps(created_session)
-                return pickle_session
+                #pickle_session = pickle.dumps(created_session)
+                #return pickle_session
+                return protocol._ACK
             else:
                 return False
 

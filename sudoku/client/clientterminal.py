@@ -6,8 +6,10 @@ import pickle
 from time import sleep
 
 from sudoku.client.game_server_discovery import GameServerDiscovery
+from sudoku.client.ic_update_link import ICUpdate_link
 from sudoku.client.rpc_client import RpcClient
 from sudoku.common import protocol
+import threading
 
 
 class ClientTerminal:
@@ -15,6 +17,7 @@ class ClientTerminal:
         self.current_session = None
         self.client_specifier = "default"  # used by server to distinguish clients for matching up link backs
         self.rpcClient = None
+        self.ic_update_link = None
 
     def leave_session(self):
         # self.gameUpdateLink.destroy()
@@ -71,7 +74,22 @@ class ClientTerminal:
         new_session = self.rpcClient.call(protocol._REQ_CREATE_SESSION + protocol._MSG_FIELD_SEP +
                                         game_name + protocol._MSG_FIELD_SEP + max_num_players)
 
+        t = threading.Thread(target=self.start_session_thread, args=(game_name,))
+        t.daemon = True
+        t.start()
+
         return new_session
+
+    def start_session_thread(self, game_name):
+        """
+        Use this method to start the publish subscribe scenario for game updates as a deamon thread.
+        :param game_name: Name of the game and also of the exchange
+        :return: None
+        """
+        self.ic_update_link = ICUpdate_link(game_name)
+        self.ic_update_link.latest_game = self.current_session
+        return
+
 
     def get_current_sessions(self):
         """
