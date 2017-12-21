@@ -39,6 +39,7 @@ _SA_NICKNAME = 'sa3'
 _SA_CURRENT_SESSIONS = 'sa4'
 _SA_UPDATE_GAME = 'sa5'
 _SA_JOIN_SESSION = 'sa6'
+_SA_LEAVE_SESSION = 'sa7'
 
 # session status
 _PENDING = 'ss0'
@@ -70,3 +71,6 @@ def server_process(message):
 
     elif message.startswith(_REQ_JOIN_SESSION + _MSG_FIELD_SEP):
         return _SA_JOIN_SESSION
+
+    elif message.startswith(_REQ_LEAVE_SESSION):
+        return _SA_LEAVE_SESSION

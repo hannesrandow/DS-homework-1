@@ -128,8 +128,9 @@ class GamesHandler:
         """
         return self.current_sessions
 
-    def leave_session(self):
-        pass
+    def leave_session(self, uuid):
+        del(current_players[uuid])
+        # TODO: use link back to inform other users
 
     def get_num_of_sessions(self):
         """
@@ -239,6 +240,13 @@ def request_handler(msg, uuid, args):
             #     if other_player != player:
             #         other_player.send_game_updates(my_session)
             #         print "[based a game update rqst] game updates sent to ", other_player.nickname
+        elif protocol.server_process(msg) == protocol._SA_LEAVE_SESSION:
+            print "LEAVE SESSION RQST"
+            if uuid not in current_players.keys():
+                return protocol._RSP_USER_NOT_EXISTING
+
+            games.leave_session(uuid)
+            return protocol._RSP_OK
         elif msg == protocol._TERMINATOR:
             return
     except Exception as e:
