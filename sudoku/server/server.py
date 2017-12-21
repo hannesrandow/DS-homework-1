@@ -130,7 +130,9 @@ class GamesHandler:
 
     def leave_session(self, uuid):
         del(current_players[uuid])
+        user_left = self.get_session(uuid).remove_player(uuid)
         # TODO: use link back to inform other users
+        return user_left
 
     def get_num_of_sessions(self):
         """

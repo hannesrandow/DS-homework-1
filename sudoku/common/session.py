@@ -115,3 +115,11 @@ class Session(object):
                 self.game_status = protocol._READY
             was_successful = True
         return was_successful
+
+    def remove_player(self, uuid):
+        if uuid in self.current_players.keys():
+            del(self.current_players[uuid])
+            if len(self.current_players) == 1:
+                self.game_status = protocol._COMPLETED
+            return True
+        return False
