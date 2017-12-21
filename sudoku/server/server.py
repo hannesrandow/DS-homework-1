@@ -34,6 +34,7 @@ class GamesHandler:
         self.__lock = threading.Lock()
         self.sudoku_name = args.filename
         self.sudoku_sol = args.filename + '_solution'
+        self.ic_server_update = None
 
     def __is_name_valid(self, game_name):
         for s in self.current_sessions:
@@ -68,7 +69,7 @@ class GamesHandler:
                           [current_player])
         session.game_start()
         # this is the publish/subscribe that is used to send updates to all clients in the game
-        ic_server_update = ICServerUpdate(game_name=game_name, session=session)
+        self.ic_server_update = ICServerUpdate(game_name=game_name, session=session)
 
 
         self.__lock.acquire()
@@ -137,11 +138,18 @@ class GamesHandler:
         """
         return len(self.current_sessions)
 
+    # testing some stuff
+    def test(self):
+        print 'in test'
+        self.ic_server_update.publish_update(self.current_sessions[0])
+
 
 def request_handler(msg, uuid, args):
     print 'handle client %s request', uuid
     games = args[0] # FIXME: do something like we get from thread.Thread.create(args=)
     global current_players
+
+    print msg
 
     try:
         if msg == '':
@@ -171,6 +179,11 @@ def request_handler(msg, uuid, args):
                 return protocol._ACK
             else:
                 return False
+
+        #testing purposes
+        elif msg == 'test':
+            games.test()
+            return protocol._ACK
 
         elif protocol.server_process(msg) == protocol._SA_JOIN_SESSION:
             print("JOIN SESSION RQST")

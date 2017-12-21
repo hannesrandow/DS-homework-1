@@ -46,9 +46,7 @@ class ICUpdate_link:
             print("about to update gui")
             self.gui.update(self.latest_game)
         else:
-            for row in game_session.game.state:
-                for cell in row:
-                    print cell
-                print '\n'
+            for row in self.latest_game.game_state:
+                print row
         return
 

@@ -221,6 +221,10 @@ class ClientTerminal:
         elif user_action.startswith(protocol._TERMINATOR):
             self.send_request(protocol._TERMINATOR)
 
+        elif user_action.startswith('test'):
+            r = self.rpcClient.call(user_action)
+            print r
+
     def stop(self):
         """
         Destroy the connection.
