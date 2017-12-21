@@ -79,7 +79,8 @@ class ClientTerminal:
         """
         #get current sessions from server
         current_sessions = self.rpcClient.call(protocol._REQ_CURRENT_SESSIONS)
-        current_sessions = pickle.loads(current_sessions)
+        # FIXME: use sth different (do not encode here) [without it it does not work on Windows]
+        current_sessions = pickle.loads(current_sessions.encode("UTF-8"))
 
         for session in current_sessions:
             print
