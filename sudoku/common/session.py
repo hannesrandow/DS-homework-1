@@ -119,6 +119,7 @@ class Session(object):
     def remove_player(self, uuid):
         if uuid in self.current_players.keys():
             del(self.current_players[uuid])
+            # in case just one player stays in game, the game is over
             if len(self.current_players) == 1:
                 self.game_status = protocol._COMPLETED
             return True
