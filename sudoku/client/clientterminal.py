@@ -74,6 +74,7 @@ class ClientTerminal:
         new_session = self.rpcClient.call(protocol._REQ_CREATE_SESSION + protocol._MSG_FIELD_SEP +
                                         game_name + protocol._MSG_FIELD_SEP + max_num_players)
 
+        # Let the pub/sub run as deamon thread
         t = threading.Thread(target=self.start_session_thread, args=(game_name,))
         t.daemon = True
         t.start()
