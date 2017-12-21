@@ -8,32 +8,19 @@ from time import sleep
 from sudoku.client.game_server_discovery import GameServerDiscovery
 from sudoku.client.rpc_client import RpcClient
 from sudoku.common import protocol
+from sudoku.client.ic_update_link import ICUpdate_link
 
 
 class ClientTerminal:
     def __init__(self):
         self.current_session = None
         self.client_specifier = "default"  # used by server to distinguish clients for matching up link backs
+        self.update_link = None
         self.rpcClient = None
 
     def leave_session(self):
         # self.gameUpdateLink.destroy()
         pass
-
-    def send_request(self, m):
-        """
-        Send requests to the server and waits for the response.
-        :param m: The message that is sent to the server.
-        :return: Processed response from the server.
-        """
-        self.socket.sendall(m)
-        rsp = self.socket.recv(10000)
-        if rsp == protocol._ACK:
-            return True
-        elif rsp == protocol._RSP_SESSION_FULL:
-            return False
-        else:
-            return pickle.loads(rsp)
 
     def update(self, user_action, current_session):
         """
@@ -47,12 +34,11 @@ class ClientTerminal:
         column = user_action[2]
         number = user_action[3]
 
-        update_request = self.send_request(protocol._REQ_UPDATE_GAME + protocol._MSG_FIELD_SEP +
+        update_request = self.rpcClient.call(protocol._REQ_UPDATE_GAME + protocol._MSG_FIELD_SEP +
                                            row + protocol._MSG_FIELD_SEP + column + protocol._MSG_FIELD_SEP + number)
 
-        # print update_request
-        #if update_request.game_state != current_session.game_state:
-        if update_request[1]:
+        update_request = pickle.loads(update_request)
+        if update_request[1] == True:
             print 'correct'
         else:
             print 'incorrect'
@@ -101,10 +87,10 @@ class ClientTerminal:
         # self.send_request(protocol._REQ_NICKNAME + protocol._MSG_FIELD_SEP + n)
         res = self.rpcClient.call(protocol._REQ_NICKNAME + protocol._MSG_FIELD_SEP + n)
         print(res)
-        if res == protocol._ACK:
+        if res == protocol._RSP_OK:
             print("nickname accepted")
         else:
-            print("nickname did not accepted!")
+            print("nickname did not accepted!") # TODO: print why not!
         return
 
     def connect(self, serv_addr='localhost'):
@@ -120,10 +106,10 @@ class ClientTerminal:
             exit(-1)
 
         res = self.rpcClient.call(protocol._REQ_INITIAL_CONNECT)
-        if res == protocol._ACK:
+        if res == protocol._RSP_OK:
             print("connected successfuly!")
         else:
-            print("some problem with connection!")
+            print("some problem with connection!") # TODO: print why not!
         return
 
     def join_session(self, user_action):
@@ -134,11 +120,15 @@ class ClientTerminal:
         number of players
         """
         session_id = user_action.split(' ')[1]
-        rsp = self.send_request(protocol._REQ_JOIN_SESSION + protocol._MSG_FIELD_SEP + session_id)
+        rsp = self.rpcClient.call(protocol._REQ_JOIN_SESSION + protocol._MSG_FIELD_SEP + session_id)
+        # TODO: use simpler output for the joining session (on server!)
         if type(rsp) != bool:
             return rsp
         else:
-            return 'session full'
+            if rsp == protocol._RSP_SESSION_FULL:
+                return 'session full'
+            else:
+                return "UUID is not available"
 
     def find_self(self):
         """
@@ -182,7 +172,8 @@ class ClientTerminal:
             inf = user_action.split(' ')
         elif user_action.startswith('-join'):
             rsp = self.join_session(user_action)
-            self.gameUpdateLink.create(self.socket.getsockname())
+            # self.gameUpdateLink.create(self.socket.getsockname())
+            # TODO: self.update_link = ICUpdate_link(rsp.game_name or sth similar)
             # print "--- we're joined --- "
             # print rsp
             if type(rsp) == str:
@@ -197,8 +188,8 @@ class ClientTerminal:
                 print 'my score is: ', score
             else: 
                 print "currenty not in a session"
-        elif user_action.startswith('-sn'):
-            print self.socket.getsockname()
+        # elif user_action.startswith('-sn'):
+        #     print self.socket.getsockname()
         elif user_action.startswith(protocol._TERMINATOR):
             self.send_request(protocol._TERMINATOR)
 

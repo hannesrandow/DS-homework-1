@@ -150,70 +150,83 @@ def request_handler(msg, uuid, args):
         if protocol.server_process(msg) == protocol._SA_NEW_PLAYER:
             print("NEW PLAYER RQST")
             current_players[uuid] = Player(uuid)
-            return protocol._ACK
+            return protocol._RSP_OK
 
         elif protocol.server_process(msg) == protocol._SA_NICKNAME:
             print("NICKNAME RQST")
-            if uuid in current_players.keys():
-                player = current_players[uuid]
-                player.nickname = msg.split(protocol._MSG_FIELD_SEP)[1]
-                return protocol._ACK
-            else:
-                return False
+            if uuid not in current_players.keys():
+                return protocol._RSP_USER_NOT_EXISTING
+
+            player = current_players[uuid]
+            player.nickname = msg.split(protocol._MSG_FIELD_SEP)[1]
+            return protocol._RSP_OK
 
         elif protocol.server_process(msg) == protocol._SA_CREATE_SESSION:
             print("CREATE SESSION RQST")
-            if uuid in current_players.keys():
-                player = current_players[uuid]
-                created_session = games.new_session(msg, player)
-                pickle_session = pickle.dumps(created_session)
-                return pickle_session
-            else:
-                return False
+            if uuid not in current_players.keys():
+                return protocol._RSP_USER_NOT_EXISTING
+
+            player = current_players[uuid]
+            created_session = games.new_session(msg, player)
+            pickle_session = pickle.dumps(created_session)
+            return pickle_session # TODO: return acknowledgement here
+            # TODO: send session through other channel!
+
 
         elif protocol.server_process(msg) == protocol._SA_JOIN_SESSION:
             print("JOIN SESSION RQST")
-        #
-        #     joined_session = games.join_session(msg, player)
-        #     if joined_session:
-        #         pickle_session = pickle.dumps(joined_session)
-        #         sock.send(pickle_session)
-        #     else:
-        #         sock.send(protocol._RSP_SESSION_FULL)
-        #
-        #     for other_player in joined_session.current_players:
-        #         # TODO: exlude the current player that upated the game!
-        #         # if other_player != player:
-        #         other_player.send_game_updates(joined_session)
-        #         print "[based a join rqst] game updates sent to : ", other_player.nickname
-        #
+            if uuid not in current_players.keys():
+                return protocol._RSP_USER_NOT_EXISTING
+
+            player = current_players[uuid]
+            joined_session = games.join_session(msg, player)
+            if joined_session:
+                pickle_session = pickle.dumps(joined_session)
+                # for other_player in joined_session.current_players:
+                #     # TODO: exlude the current player that upated the game!
+                #     # if other_player != player:
+                #     other_player.send_game_updates(joined_session)
+                #     print "[based a join rqst] game updates sent to : ", other_player.nickname
+                return pickle_session # TODO: return acknowledgement here instead
+                # TODO: send session through other channel!
+            else:
+                return protocol._RSP_SESSION_FULL
+
+
         elif protocol.server_process(msg) == protocol._SA_CURRENT_SESSIONS:
             print("GET CURRENT SESSIONS RQST")
             return pickle.dumps(games.get_sessions())
 
         elif protocol.server_process(msg) == protocol._SA_UPDATE_GAME:
             print("GAME UPDATE RQST")
-        #     print(msg)
-        #     # TODO: update Score - player.updateScore(header_part2)
-        #     # TODO: give in the game_id
-        #     s = player.current_session_id
-        #     my_session = games.get_session(s)
-        #
-        #     if my_session:
-        #         correct = my_session.update_game(msg, player)
-        #     else:
-        #         print("error: no session with id %d found!" % s)
-        #         return
-        #
-        #     print my_session.game_state
-        #
-        #     pickle_session = pickle.dumps((my_session, correct))
-        #     sock.send(pickle_session)
-        #     # send to other players of the same session
-        #     for other_player in my_session.current_players:
-        #         if other_player != player:
-        #             other_player.send_game_updates(my_session)
-        #             print "[based a game update rqst] game updates sent to ", other_player.nickname
+            # TODO: update Score - player.updateScore(header_part2)
+            # TODO: give in the game_id
+            if uuid not in current_players.keys():
+                return protocol._RSP_USER_NOT_EXISTING
+
+            player = current_players[uuid]
+            s = player.current_session_id
+            my_session = games.get_session(s)
+
+            correct = False
+            if my_session:
+                correct = my_session.update_game(msg, player)
+            else:
+                print("error: no session with id %d found!" % s)
+                return protocol._RSP_NO_GAME_FOUND
+
+            return pickle.dumps((my_session, correct)) # TODO: return acknowledgement here instead
+            # if correct:
+            #     return protocol._RSP_GAME_UPDATE_CORRECT
+            # else:
+            #     return protocol._RSP_GAME_UPDATE_INCORRECT
+
+            # TODO: send session through other channel!
+            # # send to other players of the same session
+            # for other_player in my_session.current_players:
+            #     if other_player != player:
+            #         other_player.send_game_updates(my_session)
+            #         print "[based a game update rqst] game updates sent to ", other_player.nickname
         elif msg == protocol._TERMINATOR:
             return
     except Exception as e:

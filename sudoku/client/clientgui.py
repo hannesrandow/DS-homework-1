@@ -114,7 +114,7 @@ def client_gui_main(args=None):
     if m.session:
         gameplayGUI = Gameplay(addressGUI.address, m.session, client)
     else:
-        print("session is empty -- probably from multiplayerdiaglo")
+        print("session is empty -- probably from multiplayerdialog")
 
 
 if __name__ == '__main__':
