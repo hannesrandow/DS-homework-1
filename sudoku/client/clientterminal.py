@@ -22,7 +22,7 @@ class ClientTerminal:
         self.ic_update_link = None
 
     def leave_session(self):
-        # self.gameUpdateLink.destroy()
+        self.rpcClient.call(protocol._REQ_LEAVE_SESSION)
         pass
 
     def update(self, user_action, current_session):
@@ -209,6 +209,8 @@ class ClientTerminal:
                 print "currenty not in a session"
         # elif user_action.startswith('-sn'):
         #     print self.socket.getsockname()
+        elif user_action.startswith('-leave'):
+            self.leave_session()
         elif user_action.startswith(protocol._TERMINATOR):
             self.send_request(protocol._TERMINATOR)
 
