@@ -2,7 +2,7 @@ from Tkinter import *
 import tkMessageBox
 import time
 import sudoku.common.protocol as protocol
-from sudoku.client.game_update_link import GameUpdateLink
+# from sudoku.client.game_update_link import GameUpdateLink
 
 from sudoku.common import protocol
 
@@ -29,13 +29,14 @@ class Gameplay:
         self.frameScoreInput.grid(row=0, column=1, padx=10, pady=10)
         self.titleScore = Label(self.frameScoreInput, text="Scores:", font="Arial 12 bold")
         self.titleScore.pack()
-        self.gameUpdateLink = GameUpdateLink(serv_addr, self, current_session)
-        self.gameUpdateLink.create(self.client.client_ip)
+        # self.gameUpdateLink = GameUpdateLink(serv_addr, self, current_session)
+        # self.gameUpdateLink.create(self.client.client_ip)
 
-        print("wait up for other player..")
-        while self.gameUpdateLink.latest_game.game_status == protocol._PENDING:
-            time.sleep(0.1)
-        print("let's begin!")
+        # TODO: pending status for other players here!
+        # print("wait up for other player..")
+        # while self.gameUpdateLink.latest_game.game_status == protocol._PENDING:
+        #     time.sleep(0.1)
+        # print("let's begin!")
 
         # list for updating the scores
         self.varScores = []
@@ -71,7 +72,7 @@ class Gameplay:
                 tkMessageBox.showinfo("Game finished", "Winner is: " + winner.nickname)
 
         print("asdasdjklajsdkjasldjaskldj")
-        self.gameUpdateLink.destroy()
+        # self.gameUpdateLink.destroy()
         self.client.sock.close()
         self.root.destroy()
 

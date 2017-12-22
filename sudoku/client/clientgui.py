@@ -11,6 +11,7 @@ from sudoku.GUI.EnterServerAddressDialog import EnterServerAddressDialog
 from sudoku.GUI.Gameplay import *
 from sudoku.GUI.EnterNicknameDialog import *
 from sudoku.GUI.MultiplayerGameDialog import *
+from sudoku.client.rpc_client import RpcClient
 from sudoku.common import protocol
 from sudoku.common.protocol import HOST, PORT
 
@@ -20,6 +21,7 @@ class ClientGUI:
         self.sock = socket(AF_INET, SOCK_STREAM)
         self.name = None
         self.client_ip = None
+        self.rpcClient = None
 
     def leave_session(self):
         pass
@@ -71,21 +73,32 @@ class ClientGUI:
 
     def create_session(self, game_name, max_num_players):
         # print("create session")
-        new_session = self.send_request(protocol._REQ_CREATE_SESSION + protocol._MSG_FIELD_SEP +
+        new_session = self.rpcClient.call(protocol._REQ_CREATE_SESSION + protocol._MSG_FIELD_SEP +
                                         game_name + protocol._MSG_FIELD_SEP + max_num_players)
+        new_session = pickle.loads(new_session)
         return new_session
 
     def get_current_sessions(self):
-        current_sessions = self.send_request(protocol._REQ_CURRENT_SESSIONS)
-        return current_sessions
+        current_sessions = self.rpcClient.call(protocol._REQ_CURRENT_SESSIONS)
+        # FIXME: use sth different (do not encode here) [without it it does not work on Windows]
+        return pickle.loads(current_sessions.encode("UTF-8"))
 
     def nickname(self, n):
-        self.send_request(protocol._REQ_NICKNAME + protocol._MSG_FIELD_SEP + n)
+        res = self.rpcClient.call(protocol._REQ_NICKNAME + protocol._MSG_FIELD_SEP + n)
+        print(res)
+        if res == protocol._RSP_OK:
+            print("nickname accepted")
+        else:
+            print("nickname did not accepted!")  # TODO: print why not!
         self.name = n
         return
 
     def connect(self):
-        self.send_request(protocol._REQ_INITIAL_CONNECT)
+        res = self.rpcClient.call(protocol._REQ_INITIAL_CONNECT)
+        if res == protocol._RSP_OK:
+            print("connected successfuly!")
+        else:
+            print("some problem with connection!") # TODO: print why not!
         return
 
     def join_session(self, session_id):

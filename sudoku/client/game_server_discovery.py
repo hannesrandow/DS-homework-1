@@ -90,6 +90,7 @@ class GameServerDiscovery(threading.Thread):
         # busy waiting until thread is stopped
         while not self._thread_stopped:
             sleep(1)
+        self.join()
         # now close the socket
         self.sock.close()
 

@@ -5,6 +5,7 @@ import tkMessageBox
 import re
 
 from sudoku.client.game_server_discovery import GameServerDiscovery
+from sudoku.client.rpc_client import RpcClient
 from sudoku.common import protocol
 
 
@@ -28,7 +29,7 @@ class EnterServerAddressDialog:
         self.serverList = Listbox(self.root)
         self.serverList.bind("<Double-Button-1>", self.select_server_from_list_on_double_click)
         self.serverList.grid(row=1, column=0,columnspan=4)
-
+        self.rpcClient = None
         self.root.mainloop()
 
     def confirm_server_address(self):
@@ -41,107 +42,12 @@ class EnterServerAddressDialog:
         r = re.compile("\d*\.\d*\.\d*\.\d*")
         if r.match(address) is not None:
             try:
-                self.client.sock.connect((address, protocol.PORT))
-                self.client.client_ip = self.client.sock.getsockname()
-                self.address = address
+                self.client.rpcClient = RpcClient(address)
                 self.root.destroy()
             except:
                 tkMessageBox.showerror("Connection refused", "Server not found")
         else:
             tkMessageBox.showinfo("Wrong Input", "You have to enter a server address like 168.0.0.1")
-
-
-    def auto_discovery(self):
-        # start progress bar
-        popup = Tkinter.Toplevel()
-        Tkinter.Label(popup, text="Looking for server(s)..").grid(row=0, column=0)
-
-        popup.grab_set()
-        progress_var = Tkinter.DoubleVar()
-        progress_bar = ttk.Progressbar(popup, variable=progress_var, maximum=100)
-        progress_bar.grid(row=1, column=0)  # .pack(fill=tk.X, expand=1, side=tk.BOTTOM)
-        popup.pack_slaves()
-
-        game_server_discovery = GameServerDiscovery()
-        discovered = game_server_discovery.get_list(popup, progress_var)
-        game_server_discovery.stop()
-        popup.grab_release()
-        popup.destroy()
-        self.serverList.delete(0, END)
-        for item in discovered:
-            self.serverList.insert(END, item)
-
-    def select_server_from_list_on_double_click(self, event):
-        '''
-        double click on list element updates the name entry
-        :param event: double click event on list
-        :return: None
-        '''
-        # at first clear entry
-        self.entryAddress.delete(0, 'end')
-        self.entryAddress.insert(0, self.serverList.get(ACTIVE))
-
-
-    def auto_discovery(self):
-        # start progress bar
-        popup = Tkinter.Toplevel()
-        Tkinter.Label(popup, text="Looking for server(s)..").grid(row=0, column=0)
-
-        popup.grab_set()
-        progress_var = Tkinter.DoubleVar()
-        progress_bar = ttk.Progressbar(popup, variable=progress_var, maximum=100)
-        progress_bar.grid(row=1, column=0)  # .pack(fill=tk.X, expand=1, side=tk.BOTTOM)
-        popup.pack_slaves()
-
-        game_server_discovery = GameServerDiscovery()
-        discovered = game_server_discovery.get_list(popup, progress_var)
-        game_server_discovery.stop()
-        popup.grab_release()
-        popup.destroy()
-        self.serverList.delete(0, END)
-        for item in discovered:
-            self.serverList.insert(END, item)
-
-    def select_server_from_list_on_double_click(self, event):
-        '''
-        double click on list element updates the name entry
-        :param event: double click event on list
-        :return: None
-        '''
-        # at first clear entry
-        self.entryAddress.delete(0, 'end')
-        self.entryAddress.insert(0, self.serverList.get(ACTIVE))
-
-
-    def auto_discovery(self):
-        # start progress bar
-        popup = Tkinter.Toplevel()
-        Tkinter.Label(popup, text="Looking for server(s)..").grid(row=0, column=0)
-
-        popup.grab_set()
-        progress_var = Tkinter.DoubleVar()
-        progress_bar = ttk.Progressbar(popup, variable=progress_var, maximum=100)
-        progress_bar.grid(row=1, column=0)  # .pack(fill=tk.X, expand=1, side=tk.BOTTOM)
-        popup.pack_slaves()
-
-        game_server_discovery = GameServerDiscovery()
-        discovered = game_server_discovery.get_list(popup, progress_var)
-        game_server_discovery.stop()
-        popup.grab_release()
-        popup.destroy()
-        self.serverList.delete(0, END)
-        for item in discovered:
-            self.serverList.insert(END, item)
-
-    def select_server_from_list_on_double_click(self, event):
-        '''
-        double click on list element updates the name entry
-        :param event: double click event on list
-        :return: None
-        '''
-        # at first clear entry
-        self.entryAddress.delete(0, 'end')
-        self.entryAddress.insert(0, self.serverList.get(ACTIVE))
 
 
     def auto_discovery(self):

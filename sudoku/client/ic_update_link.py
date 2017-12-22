@@ -25,6 +25,8 @@ class ICUpdate_link:
         self.channel.basic_consume(self.callback,
                                    queue=queue_name,
                                    no_ack=True)
+        # threading.Thread.__init__(self)
+        # self.start()
         self.main()
 
     def main(self):
