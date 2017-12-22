@@ -27,7 +27,7 @@ class Session(object):
         self.new_game_path = new_game_path
         self.game_solution_path = game_solution_path
         self.max_num_of_players = int(max_num_of_players)
-        self.current_players = current_players
+        self.current_players = current_players  # array of current players
         self.game_state = []        #Current game state. Numbers in the cells (empty cells have a 0)
         self.game_solution = []     #The solution to the sudoku puzzle. Nested list.
         
@@ -116,9 +116,9 @@ class Session(object):
             was_successful = True
         return was_successful
 
-    def remove_player(self, uuid):
-        if uuid in self.current_players.keys():
-            del(self.current_players[uuid])
+    def remove_player(self, player):
+        if player in self.current_players:
+            self.current_players.remove(player)
             # in case just one player stays in game, the game is over
             if len(self.current_players) == 1:
                 self.game_status = protocol._COMPLETED

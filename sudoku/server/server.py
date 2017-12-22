@@ -128,10 +128,9 @@ class GamesHandler:
         """
         return self.current_sessions
 
-    def leave_session(self, uuid):
-        del(current_players[uuid])
-        player_session_id = current_players[uuid].current_session_id
-        user_left = self.get_session(player_session_id).remove_player(uuid)
+    def leave_session(self, player):
+        del(current_players[player.uuid])
+        user_left = self.get_session(player.current_session_id).remove_player(player)
         # TODO: use link back to inform other users
         return user_left
 
@@ -248,7 +247,7 @@ def request_handler(msg, uuid, args):
             if uuid not in current_players.keys():
                 return protocol._RSP_USER_NOT_EXISTING
 
-            games.leave_session(uuid)
+            games.leave_session(current_players[uuid])
             return protocol._RSP_OK
         elif msg == protocol._TERMINATOR:
             return
