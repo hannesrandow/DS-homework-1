@@ -13,6 +13,7 @@ class EnterServerAddressDialog:
     def __init__(self, client):
         self.root = Tk()
         self.client = client
+        self.root.title('Server Address Dialog')
         self.address = ""
         self.lblAddress = Label(self.root, text="Please enter the address of the server: ")
         # self.lblAddress.pack(side=LEFT)

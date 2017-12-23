@@ -18,6 +18,7 @@ class Gameplay:
         self.root = Tk()
         self.row = 0
         self.col = 0
+        self.root.title('Suduko')
         self.current_session = current_session
         self.canvasSudoku = Canvas(self.root, width=LENGTH, height=LENGTH)
         self.canvasSudoku.grid(row=0)

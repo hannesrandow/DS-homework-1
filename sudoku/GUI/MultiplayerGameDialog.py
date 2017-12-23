@@ -6,6 +6,7 @@ class MultiplayerGameDialog:
     def __init__(self, client):
         self.root = Tk()
         self.client = client
+        self.root.title('Games Dialog')
         self.session = None     # either filled with the create_session or join_session
         self.lblName = Label(self.root, text="Name: ")
         self.lblName.grid(row=0)

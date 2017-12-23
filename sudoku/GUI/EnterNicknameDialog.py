@@ -6,6 +6,7 @@ class EnterNicknameDialog:
     def __init__(self):
         self.root = Tk()
         self.nickname = ""
+        self.root.title('Nickname Dialog')
         self.lblNickname = Label(self.root, text="Please enter your Nickname: ")
         self.lblNickname.grid(row=0)
         self.enterNickname = Entry(self.root)
