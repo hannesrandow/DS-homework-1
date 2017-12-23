@@ -98,13 +98,7 @@ class ClientGUI:
         self.name = n
         return
 
-    def connect(self, address):
-        try:
-            self.rpcClient = RpcClient(address)
-        except Exception as e:
-            print('could not establish connected with the RabbitMQ server: %s' % e)
-            exit(-1)
-
+    def connect(self):
         res = self.rpcClient.call(protocol._REQ_INITIAL_CONNECT)
         if res == protocol._RSP_OK:
             print("connected successfuly!")
@@ -132,13 +126,14 @@ def client_gui_main(args=None):
 
     nicknameGUI = EnterNicknameDialog()
     addressGUI = EnterServerAddressDialog(client)
-    client.connect(addressGUI.address)
+    client.connect()
     client.nickname(nicknameGUI.nickname)
     # Done: use Multiplayer Game Dialog to join existing session or create a new one
     m = MultiplayerGameDialog(client)
     # print("session created")
 
     if m.session:
+        # TODO: address of addressGUI could be wrong
         gameplayGUI = Gameplay(addressGUI.address, m.session, client)
     else:
         print("session is empty -- probably from multiplayerdialog")
