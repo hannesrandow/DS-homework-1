@@ -43,7 +43,6 @@ class EnterServerAddressDialog:
         r = re.compile("\d*\.\d*\.\d*\.\d*")
         if r.match(address) is not None:
             try:
-                self.client.rpcClient = RpcClient(address)
                 self.root.destroy()
             except:
                 tkMessageBox.showerror("Connection refused", "Server not found")

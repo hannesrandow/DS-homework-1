@@ -26,6 +26,7 @@ class ClientGUI:
     def leave_session(self):
         pass
 
+    '''
     def send_request(self, m):
         self.sock.sendall(m)
         rsp = self.sock.recv(10000)
@@ -35,15 +36,19 @@ class ClientGUI:
             return False
         else:
             return pickle.loads(rsp)
+    '''
 
     def update(self, gui, row, col, value, session):
         #print(session.game_id)
         # TODO: send the information of the to changing session (which session)
-        update_request = self.send_request(protocol._REQ_UPDATE_GAME + protocol._MSG_FIELD_SEP +
+        update_request = self.rpcClient.call(protocol._REQ_UPDATE_GAME + protocol._MSG_FIELD_SEP +
                                            str(row) + protocol._MSG_FIELD_SEP + str(col) + protocol._MSG_FIELD_SEP + str(value))
         # if update_request.game_state != session.game_state:
             # to deselect in the gui (removing the cursor)
             # gui.row, gui.col = -1, -1
+
+        # TODO: maybe we need this: update_request = pickle.loads(update_request)
+        # just for information
         if update_request[1]:
             # TODO: update score +1
             print 'correct'
@@ -93,7 +98,13 @@ class ClientGUI:
         self.name = n
         return
 
-    def connect(self):
+    def connect(self, address):
+        try:
+            self.rpcClient = RpcClient(address)
+        except Exception as e:
+            print('could not establish connected with the RabbitMQ server: %s' % e)
+            exit(-1)
+
         res = self.rpcClient.call(protocol._REQ_INITIAL_CONNECT)
         if res == protocol._RSP_OK:
             print("connected successfuly!")
@@ -103,11 +114,14 @@ class ClientGUI:
 
     def join_session(self, session_id):
         # print("join the session")
-        rsp = self.send_request(protocol._REQ_JOIN_SESSION + protocol._MSG_FIELD_SEP + str(session_id))
+        rsp = self.rpcClient.call(protocol._REQ_JOIN_SESSION + protocol._MSG_FIELD_SEP + str(session_id))
         if type(rsp) != bool:
             return rsp
         else:
-            return 'session full'
+            if rsp == protocol._RSP_SESSION_FULL:
+                return 'session full'
+            else:
+                return "UUID is not available"
 
     def process_response(self, m):
         pass
@@ -118,7 +132,7 @@ def client_gui_main(args=None):
 
     nicknameGUI = EnterNicknameDialog()
     addressGUI = EnterServerAddressDialog(client)
-    client.connect()
+    client.connect(addressGUI.address)
     client.nickname(nicknameGUI.nickname)
     # Done: use Multiplayer Game Dialog to join existing session or create a new one
     m = MultiplayerGameDialog(client)
