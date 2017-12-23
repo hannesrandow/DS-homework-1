@@ -39,24 +39,7 @@ If you want to add more sudoku puzzles, do the following:
 For example if the sudoku puzzle is stored in the file _sudoku1.csv_ then the solution should be in the file _sudoku1_solution.csv_
 
 ## GUI Preview
-___Nickname Dialog___
-User chooses a nickname to be used on the game.
-
-![Nickname Dialog](images/nickname_dialog.png)
-
-___Server Address Dialog___
-User can put in server address or use one of the addresses found by the server discovery code.
- 
-![Server Address Dialog](images/server_dialog.png)
-
-___Games Dialog___
-User can create or selected of the available games.
-
-![Games Dialog](images/games_dialog.png)
-
-___Game Play___
-Cells can be selected and new values inserted.
-
+For more info you can refer to the project [wiki page](https://github.com/hannesrandow/DS-homework-2/wiki/User-Manual).
 ![Game Play](images/gameplay.png)
 
 ## Notes
