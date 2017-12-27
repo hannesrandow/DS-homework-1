@@ -30,11 +30,12 @@ class GamesHandler:
         """
         :param args: Contains the name of the sudoku puzzle
         """
+        # list of tuples containing session and corresponding ic_server_update
         self.current_sessions = []
         self.__lock = threading.Lock()
         self.sudoku_name = args.filename
         self.sudoku_sol = args.filename + '_solution'
-        self.ic_server_update = None
+        self.ic_server_updates = []
 
     def __is_name_valid(self, game_name):
         for s in self.current_sessions:
@@ -69,7 +70,8 @@ class GamesHandler:
                           [current_player])
         session.game_start()
         # this is the publish/subscribe that is used to send updates to all clients in the game
-        self.ic_server_update = ICServerUpdate(game_name=game_name, session=session)
+        #self.ic_server_updates.append(ICServerUpdate(game_name=game_name, session=session))
+        ic_server_update = ICServerUpdate(game_name=game_name, session=session)
 
 
         self.__lock.acquire()
@@ -77,7 +79,7 @@ class GamesHandler:
         # Probably not. The exchange has the same name as the game. Therefore if passing the name to the
         # client, he can join that exchange.
         #self.current_sessions.append((session, ic_server_update))
-        self.current_sessions.append(session)
+        self.current_sessions.append((session, ic_server_update))
         self.__lock.release()
         return session
 
@@ -94,19 +96,35 @@ class GamesHandler:
             print("session id is not int convertible: %s" % information.split(protocol._MSG_FIELD_SEP))
             return # TODO: appropriate error to user
 
-        for session in self.current_sessions:
+        sessions = [s[0] for s in self.current_sessions]
+        for session in sessions:
             if session.game_id == req_ses_id:
                 break
         self.__lock.acquire()
         player.current_session_id = session.game_id
         joined_session = session.add_player(player)
+        print 'joined session ', joined_session
+        print 'players: ', ' '.join([p.nickname for p in session.current_players])
         # TODO: some mysterious behavior observed here. couldn't reproduce it [Novin]
         print("player added to current session!")
         self.__lock.release()
         if joined_session:
-            return session
+            #return session
+            return session.game_name
         else:
             return None
+
+    def update_session(self, msg, index, player):
+        """
+        Client requests to make an update to the current session.
+        :param index: Index of the session and the ic_server_update instance in the current_sessions list.
+        :return:
+        """
+        self.current_sessions[index][0].update_game(msg, player)
+        print 1
+        self.current_sessions[index][1].publish_update(self.current_sessions[index][0])
+        print 2
+        return
 
     def get_session(self, id):
         """
@@ -115,10 +133,16 @@ class GamesHandler:
         :return:
         """
         target_session = None
-        for s in self.current_sessions:
+        sessions = [s[0] for s in self.current_sessions]
+        print 'Sessions ', sessions
+        for s in sessions:
             if s.game_id == id:
                 target_session = s
-        return target_session
+        print 'target session ', target_session
+        tup_index = sessions.index(target_session)
+        print tup_index
+        return tup_index
+        #return target_session
         # return self.current_sessions[id]
 
     def get_sessions(self):
@@ -126,7 +150,8 @@ class GamesHandler:
         This method gets called when a user requests to get the sessions that are currently running.
         :return: A list of the sessions currently running.
         """
-        return self.current_sessions
+        sessions = [s[0] for s in self.current_sessions]
+        return sessions
 
     def leave_session(self, player):
         del(current_players[player.uuid])
@@ -144,10 +169,11 @@ class GamesHandler:
     # testing some stuff
     def test(self):
         print 'in test'
-        self.ic_server_update.publish_update(self.current_sessions[0])
+        #self.ic_server_updates[0].publish_update(self.current_sessions[0])
+        self.current_sessions[0][1].publish_update(self.current_sessions[0][0])
 
 
-def request_handler(msg, uuid, args):
+"""def request_handler(msg, uuid, args):
     print 'handle client %s request', uuid
     games = args[0] # FIXME: do something like we get from thread.Thread.create(args=)
     global current_players
@@ -221,20 +247,21 @@ def request_handler(msg, uuid, args):
 
             player = current_players[uuid]
             s = player.current_session_id
-            my_session = games.get_session(s)
+            index = games.get_session(s)
+            print 'INDEX: ', index
 
             correct = False
-            if my_session:
-                correct = my_session.update_game(msg, player)
+            if index is not None:
+                #correct = my_session.update_game(msg, player)
+                games.update_session(msg, index, player)
+
+                #ic_update.publish_update(my_session)
             else:
                 print("error: no session with id %d found!" % s)
                 return protocol._RSP_NO_GAME_FOUND
 
-            return pickle.dumps((my_session, correct)) # TODO: return acknowledgement here instead
-            # if correct:
-            #     return protocol._RSP_GAME_UPDATE_CORRECT
-            # else:
-            #     return protocol._RSP_GAME_UPDATE_INCORRECT
+            #return pickle.dumps((my_session, correct)) # TODO: return acknowledgement here instead
+            return protocol._ACK
 
             # TODO: send session through other channel!
             # # send to other players of the same session
@@ -276,7 +303,99 @@ def request_handler(msg, uuid, args):
     #     print("current_players list being updated..")
     #     player = None
     # else:
-    #     print("player object is none [weird!!]")
+    #     print("player object is none [weird!!]")"""
+
+def request_handler(msg, uuid, args):
+    print 'handle client %s request', uuid
+    games = args[0] # FIXME: do something like we get from thread.Thread.create(args=)
+    global current_players
+
+    print msg
+
+    if msg == '':
+        return
+
+    if protocol.server_process(msg) == protocol._SA_NEW_PLAYER:
+        print("NEW PLAYER RQST")
+        current_players[uuid] = Player(uuid)
+        return protocol._RSP_OK
+
+    elif protocol.server_process(msg) == protocol._SA_NICKNAME:
+        print("NICKNAME RQST")
+        if uuid not in current_players.keys():
+            return protocol._RSP_USER_NOT_EXISTING
+
+        player = current_players[uuid]
+        player.nickname = msg.split(protocol._MSG_FIELD_SEP)[1]
+        return protocol._RSP_OK
+
+    elif protocol.server_process(msg) == protocol._SA_CREATE_SESSION:
+        print("CREATE SESSION RQST")
+        if uuid not in current_players.keys():
+            return protocol._RSP_USER_NOT_EXISTING
+
+        player = current_players[uuid]
+        created_session = games.new_session(msg, player)
+        pickle_session = pickle.dumps(created_session)
+        return pickle_session
+    #testing purposes
+    elif msg == 'test':
+        games.test()
+        return protocol._ACK
+
+    elif protocol.server_process(msg) == protocol._SA_JOIN_SESSION:
+        print("JOIN SESSION RQST")
+        if uuid not in current_players.keys():
+            return protocol._RSP_USER_NOT_EXISTING
+
+        player = current_players[uuid]
+        joined_session = games.join_session(msg, player)
+        if joined_session:
+            rsp = protocol._ACK + protocol._MSG_FIELD_SEP + joined_session
+            return rsp
+            # TODO: send session through other channel!
+        else:
+            return protocol._RSP_SESSION_FULL
+
+
+    elif protocol.server_process(msg) == protocol._SA_CURRENT_SESSIONS:
+        print("GET CURRENT SESSIONS RQST")
+        return pickle.dumps(games.get_sessions())
+
+    elif protocol.server_process(msg) == protocol._SA_UPDATE_GAME:
+        print("GAME UPDATE RQST")
+        # TODO: update Score - player.updateScore(header_part2)
+        # TODO: give in the game_id
+        if uuid not in current_players.keys():
+            return protocol._RSP_USER_NOT_EXISTING
+
+        player = current_players[uuid]
+        s = player.current_session_id
+        index = games.get_session(s)
+        print 'INDEX: ', index
+
+        correct = False
+        if index is not None:
+            #correct = my_session.update_game(msg, player)
+            games.update_session(msg, index, player)
+
+            #ic_update.publish_update(my_session)
+        else:
+            print("error: no session with id %d found!" % s)
+            return protocol._RSP_NO_GAME_FOUND
+
+        #return pickle.dumps((my_session, correct)) # TODO: return acknowledgement here instead
+        return protocol._ACK
+
+        # TODO: send session through other channel!
+        # # send to other players of the same session
+        # for other_player in my_session.current_players:
+        #     if other_player != player:
+        #         other_player.send_game_updates(my_session)
+        #         print "[based a game update rqst] game updates sent to ", other_player.nickname
+    elif msg == protocol._TERMINATOR:
+        return
+
 
 
 def game_server_beacon(interval):

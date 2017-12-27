@@ -37,6 +37,8 @@ class ICUpdate_link:
         """
         Probably will have to pickle game_session, since callback takes a string here.
         Receive the updates from the server and update the game accordingly.
+
+        Have to add a check here, to update gui only if there is a change?
         :param ch:
         :param method:
         :param properties:
@@ -44,6 +46,7 @@ class ICUpdate_link:
         :return: None
         """
         self.latest_game = pickle.loads(game_session)
+        print 'callback'
         if self.gui:  # call only for the gui version
             print("about to update gui")
             self.gui.update(self.latest_game)

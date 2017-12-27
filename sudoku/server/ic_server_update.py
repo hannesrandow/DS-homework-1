@@ -27,13 +27,16 @@ class ICServerUpdate:
         return
 
     def publish_update(self, update):
+        print update
         update = pickle.dumps(update)
         print('published update')
         self.channel.basic_publish(exchange=self.game_name,
                                    routing_key='',
                                    body=update)
-        if len(self.users) == 0:
-            self.delete_game()
+
+        # TODO players have to be added to self.users
+        #if len(self.users) == 0:
+        #    self.delete_game()
         return
 
     def delete_game(self):

@@ -25,7 +25,7 @@ class ClientTerminal:
         self.rpcClient.call(protocol._REQ_LEAVE_SESSION)
         pass
 
-    def update(self, user_action, current_session):
+    def update(self, user_action):
         """
         This method allows the user to make a change to the sudoku game.
         :param user_action: Contains the row and column where the user makes the change, as well as the new number.
@@ -33,19 +33,25 @@ class ClientTerminal:
         :return: The response from the server whether the update was correct or incorrect.
         """
         user_action = user_action.split(' ')
-        row = user_action[1]
-        column = user_action[2]
-        number = user_action[3]
+        if len(user_action) > 1:
+            row = user_action[1]
+            column = user_action[2]
+            number = user_action[3]
+            m = row + protocol._MSG_FIELD_SEP + column + protocol._MSG_FIELD_SEP + number
+        else:
+            m = 'INIT'
 
-        update_request = self.rpcClient.call(protocol._REQ_UPDATE_GAME + protocol._MSG_FIELD_SEP +
-                                           row + protocol._MSG_FIELD_SEP + column + protocol._MSG_FIELD_SEP + number)
+        update_request = self.rpcClient.call(protocol._REQ_UPDATE_GAME + protocol._MSG_FIELD_SEP + m)
+        #update_request = self.rpcClient.call(protocol._REQ_UPDATE_GAME + protocol._MSG_FIELD_SEP +
+        #                                   row + protocol._MSG_FIELD_SEP + column + protocol._MSG_FIELD_SEP + number)
 
-        update_request = pickle.loads(update_request)
+        return update_request
+        """update_request = pickle.loads(update_request)
         if update_request[1] == True:
             print 'correct'
         else:
             print 'incorrect'
-        return update_request[0]
+        return update_request[0]"""
 
     def create_session(self, game_name, max_num_players):
         """
@@ -87,6 +93,7 @@ class ClientTerminal:
         # FIXME: use sth different (do not encode here) [without it it does not work on Windows]
         current_sessions = pickle.loads(current_sessions.encode("UTF-8"))
 
+        #print current_sessions
         for session in current_sessions:
             print
             '------------------ SESSION ---------------------'
@@ -141,13 +148,13 @@ class ClientTerminal:
         session_id = user_action.split(' ')[1]
         rsp = self.rpcClient.call(protocol._REQ_JOIN_SESSION + protocol._MSG_FIELD_SEP + session_id)
         # TODO: use simpler output for the joining session (on server!)
-        if type(rsp) != bool:
+        if rsp.startswith(protocol._ACK):
             return rsp
+        elif rsp.startswith(protocol._RSP_SESSION_FULL):
+            print 'session full'
         else:
-            if rsp == protocol._RSP_SESSION_FULL:
-                return 'session full'
-            else:
-                return "UUID is not available"
+            print 'UUID is not available'
+        return
 
     def find_self(self):
         """
@@ -186,20 +193,17 @@ class ClientTerminal:
         elif user_action.startswith('-getsessions'):
             self.get_current_sessions()
         elif user_action.startswith('-update'):
-            self.current_session = self.update(user_action, self.current_session)
+            #self.current_session = self.update(user_action, self.current_session)
+            print self.update(user_action)
         elif user_action.startswith('-solution'):
             inf = user_action.split(' ')
         elif user_action.startswith('-join'):
             rsp = self.join_session(user_action)
-            # self.gameUpdateLink.create(self.socket.getsockname())
-            # TODO: self.update_link = ICUpdate_link(rsp.game_name or sth similar)
-            # print "--- we're joined --- "
-            # print rsp
-            if type(rsp) == str:
-                print 'incorrect response : ', rsp
-            else:
-                self.current_session = rsp
-            # print "in the join: ", current_session
+            if rsp is not None:
+                game_name = rsp.split(protocol._MSG_FIELD_SEP)[1]
+                t = threading.Thread(target=self.start_session_thread, args=(game_name,))
+                t.daemon = True
+                t.start()
         elif user_action.startswith('-score'):
             #score = self.current_session.current_players[0].score
             if self.current_session:
