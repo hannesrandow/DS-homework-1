@@ -64,24 +64,16 @@ class GamesHandler:
         session = Session(protocol._PENDING, s_id, game_name,
                           self.sudoku_name,
                           self.sudoku_sol,
-        #                  'sudoku/puzzles/sudoku_easy_1.csv',
-        #                  'sudoku/puzzles/sudoku_easy_1_solution.csv',
                           max_num_of_players,
                           [current_player])
         session.game_start()
         # this is the publish/subscribe that is used to send updates to all clients in the game
-        #self.ic_server_updates.append(ICServerUpdate(game_name=game_name, session=session))
         ic_server_update = ICServerUpdate(game_name=game_name, session=session)
-
-
         self.__lock.acquire()
-        # Do we need to store all the ic_server_update instances somewhere?
-        # Probably not. The exchange has the same name as the game. Therefore if passing the name to the
-        # client, he can join that exchange.
-        #self.current_sessions.append((session, ic_server_update))
         self.current_sessions.append((session, ic_server_update))
         self.__lock.release()
-        return session
+        #return session
+        return
 
     def join_session(self, information, player):
         """
@@ -120,10 +112,9 @@ class GamesHandler:
         :param index: Index of the session and the ic_server_update instance in the current_sessions list.
         :return:
         """
-        self.current_sessions[index][0].update_game(msg, player)
-        print 1
+        if msg.split(protocol._MSG_FIELD_SEP)[1] != protocol._INIT:
+            self.current_sessions[index][0].update_game(msg, player)
         self.current_sessions[index][1].publish_update(self.current_sessions[index][0])
-        print 2
         return
 
     def get_session(self, id):
@@ -154,10 +145,12 @@ class GamesHandler:
         return sessions
 
     def leave_session(self, player):
-        del(current_players[player.uuid])
-        user_left = self.get_session(player.current_session_id).remove_player(player)
+        index = self.get_session(player.current_session_id)#.remove_player(player)
         # TODO: use link back to inform other users
-        return user_left
+        self.current_sessions[index][0].remove_player(player)
+        self.current_sessions[index][1].publish_update(self.current_sessions[index][0])
+        del (current_players[player.uuid])
+        return True
 
     def get_num_of_sessions(self):
         """
@@ -166,144 +159,6 @@ class GamesHandler:
         """
         return len(self.current_sessions)
 
-    # testing some stuff
-    def test(self):
-        print 'in test'
-        #self.ic_server_updates[0].publish_update(self.current_sessions[0])
-        self.current_sessions[0][1].publish_update(self.current_sessions[0][0])
-
-
-"""def request_handler(msg, uuid, args):
-    print 'handle client %s request', uuid
-    games = args[0] # FIXME: do something like we get from thread.Thread.create(args=)
-    global current_players
-
-    print msg
-
-    try:
-        if msg == '':
-            return
-
-        if protocol.server_process(msg) == protocol._SA_NEW_PLAYER:
-            print("NEW PLAYER RQST")
-            current_players[uuid] = Player(uuid)
-            return protocol._RSP_OK
-
-        elif protocol.server_process(msg) == protocol._SA_NICKNAME:
-            print("NICKNAME RQST")
-            if uuid not in current_players.keys():
-                return protocol._RSP_USER_NOT_EXISTING
-
-            player = current_players[uuid]
-            player.nickname = msg.split(protocol._MSG_FIELD_SEP)[1]
-            return protocol._RSP_OK
-
-        elif protocol.server_process(msg) == protocol._SA_CREATE_SESSION:
-            print("CREATE SESSION RQST")
-            if uuid not in current_players.keys():
-                return protocol._RSP_USER_NOT_EXISTING
-
-            player = current_players[uuid]
-            created_session = games.new_session(msg, player)
-            pickle_session = pickle.dumps(created_session)
-            return pickle_session # TODO: return acknowledgement here
-            # TODO: send session through other channel!
-
-        #testing purposes
-        elif msg == 'test':
-            games.test()
-            return protocol._ACK
-
-        elif protocol.server_process(msg) == protocol._SA_JOIN_SESSION:
-            print("JOIN SESSION RQST")
-            if uuid not in current_players.keys():
-                return protocol._RSP_USER_NOT_EXISTING
-
-            player = current_players[uuid]
-            joined_session = games.join_session(msg, player)
-            if joined_session:
-                pickle_session = pickle.dumps(joined_session)
-                # for other_player in joined_session.current_players:
-                #     # TODO: exlude the current player that upated the game!
-                #     # if other_player != player:
-                #     other_player.send_game_updates(joined_session)
-                #     print "[based a join rqst] game updates sent to : ", other_player.nickname
-                return pickle_session # TODO: return acknowledgement here instead
-                # TODO: send session through other channel!
-            else:
-                return protocol._RSP_SESSION_FULL
-
-
-        elif protocol.server_process(msg) == protocol._SA_CURRENT_SESSIONS:
-            print("GET CURRENT SESSIONS RQST")
-            return pickle.dumps(games.get_sessions())
-
-        elif protocol.server_process(msg) == protocol._SA_UPDATE_GAME:
-            print("GAME UPDATE RQST")
-            # TODO: update Score - player.updateScore(header_part2)
-            # TODO: give in the game_id
-            if uuid not in current_players.keys():
-                return protocol._RSP_USER_NOT_EXISTING
-
-            player = current_players[uuid]
-            s = player.current_session_id
-            index = games.get_session(s)
-            print 'INDEX: ', index
-
-            correct = False
-            if index is not None:
-                #correct = my_session.update_game(msg, player)
-                games.update_session(msg, index, player)
-
-                #ic_update.publish_update(my_session)
-            else:
-                print("error: no session with id %d found!" % s)
-                return protocol._RSP_NO_GAME_FOUND
-
-            #return pickle.dumps((my_session, correct)) # TODO: return acknowledgement here instead
-            return protocol._ACK
-
-            # TODO: send session through other channel!
-            # # send to other players of the same session
-            # for other_player in my_session.current_players:
-            #     if other_player != player:
-            #         other_player.send_game_updates(my_session)
-            #         print "[based a game update rqst] game updates sent to ", other_player.nickname
-        elif protocol.server_process(msg) == protocol._SA_LEAVE_SESSION:
-            print "LEAVE SESSION RQST"
-            if uuid not in current_players.keys():
-                return protocol._RSP_USER_NOT_EXISTING
-
-            games.leave_session(current_players[uuid])
-            return protocol._RSP_OK
-        elif msg == protocol._TERMINATOR:
-            return
-    except Exception as e:
-        print("some error happened in server request handler: %s", e)
-
-    # TODO: detect whether a client is disconnected
-    # TODO: remove clients if they are disconnected or requested for disconnection
-    # if reached here then connection had to be terminated
-    # print("socket closed")
-    # player.close()
-    # print("client link back closed")
-
-    # update list of players
-    # if player and player.current_session_id:
-    #     current_game = games.get_session(player.current_session_id)
-    #     current_game.current_players.remove(player)  # remove player from his session
-    #     # check on the status of the game if only one player is left -> game completed
-    #     if len(current_game.current_players) == 1:
-    #         current_game.game_status = protocol._COMPLETED
-    #         for other_player in current_game.current_players:
-    #             other_player.send_game_updates(current_game)
-    #             print "only one player left -> game ends for : ", other_player.nickname
-    #
-    #     current_players.remove(player)  # remove player from current_players list
-    #     print("current_players list being updated..")
-    #     player = None
-    # else:
-    #     print("player object is none [weird!!]")"""
 
 def request_handler(msg, uuid, args):
     print 'handle client %s request', uuid
@@ -335,9 +190,8 @@ def request_handler(msg, uuid, args):
             return protocol._RSP_USER_NOT_EXISTING
 
         player = current_players[uuid]
-        created_session = games.new_session(msg, player)
-        pickle_session = pickle.dumps(created_session)
-        return pickle_session
+        games.new_session(msg, player)
+        return protocol._ACK
     #testing purposes
     elif msg == 'test':
         games.test()
@@ -383,16 +237,13 @@ def request_handler(msg, uuid, args):
         else:
             print("error: no session with id %d found!" % s)
             return protocol._RSP_NO_GAME_FOUND
-
-        #return pickle.dumps((my_session, correct)) # TODO: return acknowledgement here instead
         return protocol._ACK
 
-        # TODO: send session through other channel!
-        # # send to other players of the same session
-        # for other_player in my_session.current_players:
-        #     if other_player != player:
-        #         other_player.send_game_updates(my_session)
-        #         print "[based a game update rqst] game updates sent to ", other_player.nickname
+    elif protocol.server_process(msg) == protocol._SA_LEAVE_SESSION:
+        player = current_players[uuid]
+        games.leave_session(player)
+        return protocol._ACK
+
     elif msg == protocol._TERMINATOR:
         return
 

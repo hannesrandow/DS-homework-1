@@ -9,6 +9,7 @@ service_name = 'SUDOKU_GAME_2017'
 
 # acknowledgement
 _ACK = 'ACK'
+_INIT = 'INIT'
 
 # client requests
 _REQ_INITIAL_CONNECT = 'c0'

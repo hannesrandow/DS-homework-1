@@ -39,19 +39,11 @@ class ClientTerminal:
             number = user_action[3]
             m = row + protocol._MSG_FIELD_SEP + column + protocol._MSG_FIELD_SEP + number
         else:
-            m = 'INIT'
+            m = protocol._INIT
 
+        print 'sent update request'
         update_request = self.rpcClient.call(protocol._REQ_UPDATE_GAME + protocol._MSG_FIELD_SEP + m)
-        #update_request = self.rpcClient.call(protocol._REQ_UPDATE_GAME + protocol._MSG_FIELD_SEP +
-        #                                   row + protocol._MSG_FIELD_SEP + column + protocol._MSG_FIELD_SEP + number)
-
         return update_request
-        """update_request = pickle.loads(update_request)
-        if update_request[1] == True:
-            print 'correct'
-        else:
-            print 'incorrect'
-        return update_request[0]"""
 
     def create_session(self, game_name, max_num_players):
         """
@@ -60,9 +52,6 @@ class ClientTerminal:
         :param max_num_players: The maximum number of players that can be in the session.
         :return: The created session, from the server.
         """
-        # new_session = self.send_request(protocol._REQ_CREATE_SESSION + protocol._MSG_FIELD_SEP +
-        #                                 game_name + protocol._MSG_FIELD_SEP + max_num_players)
-
         new_session = self.rpcClient.call(protocol._REQ_CREATE_SESSION + protocol._MSG_FIELD_SEP +
                                         game_name + protocol._MSG_FIELD_SEP + max_num_players)
 
@@ -116,7 +105,7 @@ class ClientTerminal:
         if res == protocol._RSP_OK:
             print("nickname accepted")
         else:
-            print("nickname did not accepted!") # TODO: print why not!
+            print("nickname not accepted!") # TODO: print why not!
         return
 
     def connect(self, serv_addr='localhost'):
@@ -179,10 +168,12 @@ class ClientTerminal:
             self.nickname(nickname)
             print 'username created'
         elif user_action.startswith('-newsession'):
-            # current_session = create_session('test_game', '5')
             user_input = user_action.split(' ')
-            self.current_session = self.create_session(user_input[1], user_input[2])
-            # print 'new session created'
+            #self.current_session = self.create_session(user_input[1], user_input[2])
+            if self.create_session(user_input[1], user_input[2]) == protocol._ACK:
+                sleep(2)
+                print 'sucess'
+                self.update('-')
         elif user_action.startswith('-printsession'):
             #if not self.current_session:
             if self.current_session:
@@ -204,6 +195,8 @@ class ClientTerminal:
                 t = threading.Thread(target=self.start_session_thread, args=(game_name,))
                 t.daemon = True
                 t.start()
+                sleep(2)
+                self.update('-')
         elif user_action.startswith('-score'):
             #score = self.current_session.current_players[0].score
             if self.current_session:

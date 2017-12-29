@@ -1,5 +1,6 @@
 import pika
 import pickle
+import time
 
 """
 Here the server will send updates to the sudoku game to the clients that are subscribed to the game.
@@ -26,8 +27,8 @@ class ICServerUpdate:
         self.users.remove(username)
         return
 
-    def publish_update(self, update):
-        print update
+    def publish_update(self, update, delay=0):
+        time.sleep(delay)
         update = pickle.dumps(update)
         print('published update')
         self.channel.basic_publish(exchange=self.game_name,
