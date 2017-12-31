@@ -89,6 +89,7 @@ class GamesHandler:
             return # TODO: appropriate error to user
 
         sessions = [s[0] for s in self.current_sessions]
+        session = None
         for session in sessions:
             if session.game_id == req_ses_id:
                 break
@@ -96,7 +97,9 @@ class GamesHandler:
         player.current_session_id = session.game_id
         joined_session = session.add_player(player)
         print 'joined session ', joined_session
-        print 'players: ', ' '.join([p.nickname for p in session.current_players])
+        asd = [p.nickname for p in session.current_players]
+        # ' '.join([p.nickname for p in session.current_players])
+        print 'players: ', asd # FIXME: prev code gave me an error I replaced it with this one
         # TODO: some mysterious behavior observed here. couldn't reproduce it [Novin]
         print("player added to current session!")
         self.__lock.release()
