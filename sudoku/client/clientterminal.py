@@ -84,14 +84,13 @@ class ClientTerminal:
 
         #print current_sessions
         for session in current_sessions:
-            print
-            '------------------ SESSION ---------------------'
-            print session.game_name
-            print session.game_id
-            print ' '.join([player.nickname for player in session.current_players])  # session.current_players
-            print session.max_num_of_players
-            print
-            '------------------ SESSION ---------------------'
+            print '-------------------- '
+            print 'session name: ', session.game_name
+            print 'session id: ', session.game_id
+            a = [player.nickname for player in session.current_players]
+            print 'members: ', a
+            print 'max players: ', session.max_num_of_players
+            print ' '
 
     def nickname(self, n):
         """
@@ -115,7 +114,7 @@ class ClientTerminal:
         """
         # self.send_request(protocol._REQ_INITIAL_CONNECT)
         try:
-            self.rpcClient = RpcClient(serv_addr)
+            self.rpcClient =RpcClient(serv_addr)
         except Exception as e:
             print('could not establish connected with the RabbitMQ server: %s' % e)
             exit(-1)
@@ -161,7 +160,8 @@ class ClientTerminal:
         :return: None
         """
         print "client running.."
-        user_action = raw_input('enter action preceded by -flag: ')
+
+        user_action = raw_input('enter action preceded by -flag (or -help): ')
         if user_action.startswith('-username'):
             nickname = user_action.split(' ')[1]
             self.client_specifier = nickname
@@ -208,6 +208,15 @@ class ClientTerminal:
         #     print self.socket.getsockname()
         elif user_action.startswith('-leave'):
             self.leave_session()
+        elif user_action.startswith('-help'):
+            print 'help: \n' \
+            '  -username <usr> \n' \
+            '  -newsession <name> <max_player> \n' \
+            '  -printsession, -getsessions \n' \
+            '  -update <session_id> <row> <col> <val> \n' \
+            '  -solution \n',
+            '  -join <session_id> \n' \
+            '  -score \n'
         elif user_action.startswith(protocol._TERMINATOR):
             self.send_request(protocol._TERMINATOR)
 
