@@ -1,8 +1,11 @@
+import threading
+
 from Tkinter import *
 import tkMessageBox
 import time
 import sudoku.common.protocol as protocol
 # from sudoku.client.game_update_link import GameUpdateLink
+from sudoku.client.ic_update_link import ICUpdate_link
 
 from sudoku.common import protocol
 
@@ -13,18 +16,45 @@ WIDTH_ENTRIES = 1
 CELL = (LENGTH - 2 * MARGIN) / 9
 
 class Gameplay:
-    def __init__(self, serv_addr, current_session, client):
+    # ICUpdateLink: replacement for the GameUPdateLink:
+    def start_session_thread(self, game_name):
+        """
+        Use this method to start the publish subscribe scenario for game updates as a deamon thread.
+        :param game_name: Name of the game and also of the exchange
+        :return: None
+        """
+        self.client.ic_update_link = ICUpdate_link(game_name, self, self.current_session)
+
+    def __init__(self, serv_addr, gameName, client):
         self.client = client
         self.root = Tk()
         self.row = 0
         self.col = 0
         self.root.title('Suduko')
-        self.current_session = current_session
+        self.current_session = None
         self.canvasSudoku = Canvas(self.root, width=LENGTH, height=LENGTH)
         self.canvasSudoku.grid(row=0)
         self.canvasSudoku.bind("<Button-1>", self.cell_clicked)
         self.canvasSudoku.bind("<Key>", self.key_pressed)
         self.draw_grid()
+        self.init_phase = True
+
+        # Let the pub/sub run as deamon thread
+        t = threading.Thread(target=self.start_session_thread, args=(gameName,))
+        t.daemon = True
+        t.start()
+        print("ICUpdateLink started..")
+
+        time.sleep(2)
+        self.client.update(self, self.row, self.col, value='a',
+                           session=self.current_session, dummy_update=True)
+        print("Dummy update sent..")
+
+        if self.current_session:
+            print("session received..")
+        else:
+            print("session is empty -- probably from multiplayerdialog")
+        time.sleep(2)
         self.draw_numbers()
         self.frameScoreInput = Frame(self.root)
         self.frameScoreInput.grid(row=0, column=1, padx=10, pady=10)
@@ -33,7 +63,7 @@ class Gameplay:
         # self.gameUpdateLink = GameUpdateLink(serv_addr, self, current_session)
         # self.gameUpdateLink.create(self.client.client_ip)
 
-        # TODO: pending status for other players here!
+        # TODO**: pending status for other players here!
         # print("wait up for other player..")
         # while self.gameUpdateLink.latest_game.game_status == protocol._PENDING:
         #     time.sleep(0.1)
@@ -171,6 +201,7 @@ class Gameplay:
         # leave the game after sudoku is completely solved
         self.draw_numbers()
         self.update_scores()
+        print("here being updated!!!!!!!!!!!")
         if self.current_session.game_status == protocol._COMPLETED: # self.current_session.game_solution:
             print "this is leaving brudi"
             self.leave_session()

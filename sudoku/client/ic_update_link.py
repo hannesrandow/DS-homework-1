@@ -14,6 +14,7 @@ class ICUpdate_link:
         self.__shouldRunning = True
         self.gui = gui
         self.latest_game = session
+        # TODO***: use IP variable/parameter to get connected!
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='127.0.0.1'))
         self.channel = self.connection.channel()
         self.channel.exchange_declare(exchange=self.game_name,
@@ -49,6 +50,8 @@ class ICUpdate_link:
         print 'callback'
         if self.gui:  # call only for the gui version
             print("about to update gui")
+            # FIXME***: I think we need to activate a flag in GamePlay that calls following update
+            # because otherwise we get something related to main loop issue
             self.gui.update(self.latest_game)
         else:
             for row in self.latest_game.game_state:

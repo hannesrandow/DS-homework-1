@@ -1,5 +1,9 @@
+from time import sleep
+
 from Tkinter import *
 import tkMessageBox
+
+from sudoku.common import protocol
 
 
 class MultiplayerGameDialog:
@@ -8,6 +12,7 @@ class MultiplayerGameDialog:
         self.client = client
         self.root.title('Games Dialog')
         self.session = None     # either filled with the create_session or join_session
+        self.gameName = ""
         self.lblName = Label(self.root, text="Name: ")
         self.lblName.grid(row=0)
         self.enterName = Entry(self.root)
@@ -27,14 +32,21 @@ class MultiplayerGameDialog:
             self.listSessions.insert(END, item.game_name)
         self.root.mainloop()
 
+
     def create_session(self):
         '''
         client creates a new session by using the typed in name and number of players
         :return: None
         '''
-        self.name = self.enterName.get()
+        self.gameName = self.enterName.get()
         self.number = self.enterNumber.get()
-        self.session = self.client.create_session(self.name, self.number)
+        print("gamename: ", self.gameName)
+        if self.client.create_session(self.gameName, self.number) == protocol._ACK:
+            sleep(1)
+            print "success"
+            # further operations for getting the init session is done at GamePlay __init__()
+        else:
+            print "oh, crap!"
         self.root.destroy()
 
     def select_session_from_list_on_double_click(self, event):
@@ -47,10 +59,11 @@ class MultiplayerGameDialog:
         index = event.widget.curselection()[0]
         self.currentSession = self.currentSessions[int(index)]
         rsp = self.client.join_session(self.currentSession.game_id)
+        # TODO***: rsp is now just an acknowledgement, session is being received through the ICUpdateLink
         if type(rsp) == str:
             tkMessageBox.showinfo('Session is full!', 'Oops.. people already having fun on this session. Try another!')
         else:
-            self.session = rsp
+            self.session = rsp # TODO***: session must be filled using ICUpdateLink
             self.root.destroy()
 
 

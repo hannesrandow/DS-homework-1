@@ -5,15 +5,12 @@ This script handles the GUI for the user and communicates with the server.
 
 import pickle
 from socket import AF_INET, SOCK_STREAM, socket
-import time
 
 from sudoku.GUI.EnterServerAddressDialog import EnterServerAddressDialog
 from sudoku.GUI.Gameplay import *
 from sudoku.GUI.EnterNicknameDialog import *
 from sudoku.GUI.MultiplayerGameDialog import *
-from sudoku.client.rpc_client import RpcClient
 from sudoku.common import protocol
-from sudoku.common.protocol import HOST, PORT
 
 
 class ClientGUI:
@@ -22,6 +19,7 @@ class ClientGUI:
         self.name = None
         self.client_ip = None
         self.rpcClient = None
+        self.ic_update_link = None  # initialized after multiplayerGameDialog
 
     def leave_session(self):
         pass
@@ -38,15 +36,19 @@ class ClientGUI:
             return pickle.loads(rsp)
     '''
 
-    def update(self, gui, row, col, value, session):
+    def update(self, gui, row, col, value, session, dummy_update=False):
         #print(session.game_id)
+        if dummy_update: # analogous to the update('-') from clientterminal!
+            m = protocol._INIT
+        else:
+            m = str(row) + protocol._MSG_FIELD_SEP + str(col) + protocol._MSG_FIELD_SEP + str(value)
+        print("before update")
         # TODO: send the information of the to changing session (which session)
-        update_request = self.rpcClient.call(protocol._REQ_UPDATE_GAME + protocol._MSG_FIELD_SEP +
-                                           str(row) + protocol._MSG_FIELD_SEP + str(col) + protocol._MSG_FIELD_SEP + str(value))
+        update_request = self.rpcClient.call(protocol._REQ_UPDATE_GAME + protocol._MSG_FIELD_SEP + m)
         # if update_request.game_state != session.game_state:
             # to deselect in the gui (removing the cursor)
             # gui.row, gui.col = -1, -1
-
+        print("after update..")
         # TODO: maybe we need this: update_request = pickle.loads(update_request)
         # just for information
         if update_request[1]:
@@ -56,7 +58,10 @@ class ClientGUI:
             # TODO: update score -1
             print 'incorrect'
 
-        gui.update(update_request[0])
+        if dummy_update:
+            return
+        else:
+            gui.update(update_request[0])
 
     '''
     def update(self, user_action, current_session):
@@ -80,7 +85,7 @@ class ClientGUI:
         # print("create session")
         new_session = self.rpcClient.call(protocol._REQ_CREATE_SESSION + protocol._MSG_FIELD_SEP +
                                         game_name + protocol._MSG_FIELD_SEP + max_num_players)
-        new_session = pickle.loads(new_session)
+        # new_session = pickle.loads(new_session)
         return new_session
 
     def get_current_sessions(self):
@@ -132,11 +137,8 @@ def client_gui_main(args=None):
     m = MultiplayerGameDialog(client)
     # print("session created")
 
-    if m.session:
-        # TODO: address of addressGUI could be wrong
-        gameplayGUI = Gameplay(addressGUI.address, m.session, client)
-    else:
-        print("session is empty -- probably from multiplayerdialog")
+    # TODO: address of addressGUI could be wrong
+    gameplayGUI = Gameplay(addressGUI.address, str(m.gameName), client)
 
 
 if __name__ == '__main__':
