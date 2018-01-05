@@ -103,6 +103,7 @@ class Gameplay:
             scores = [player.score for player in self.current_session.current_players]
             winner = self.current_session.current_players[scores.index(max(scores))]
             print("tadaaaa")
+            # TODO: compare with the uuid now!
             if winner.client_ip == self.client.sock.getsockname():
                 tkMessageBox.showinfo("Game finished", "You win!")
             else:
