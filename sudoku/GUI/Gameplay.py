@@ -67,10 +67,10 @@ class Gameplay:
         # self.gameUpdateLink.create(self.client.client_ip)
 
         # TODO**: pending status for other players here!
-        # print("wait up for other player..")
-        # while self.gameUpdateLink.latest_game.game_status == protocol._PENDING:
-        #     time.sleep(0.1)
-        # print("let's begin!")
+        print("wait up for other player..")
+        while self.current_session.game_status == protocol._PENDING:
+            time.sleep(0.1)
+        print("let's begin!")
 
         # list for updating the scores
         self.varScores = []

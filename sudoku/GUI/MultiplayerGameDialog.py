@@ -11,7 +11,7 @@ class MultiplayerGameDialog:
         self.root = Tk()
         self.client = client
         self.root.title('Games Dialog')
-        self.session = None     # either filled with the create_session or join_session
+        # self.session = None     # either filled with the create_session or join_session
         self.gameName = ""
         self.lblName = Label(self.root, text="Name: ")
         self.lblName.grid(row=0)
@@ -58,14 +58,17 @@ class MultiplayerGameDialog:
         '''
         index = event.widget.curselection()[0]
         self.currentSession = self.currentSessions[int(index)]
-        rsp = self.client.join_session(self.currentSession.game_id)
-        # TODO***: rsp is now just an acknowledgement, session is being received through the ICUpdateLink
-        if type(rsp) == str:
+        rsp = self.client.rpcClient.call(protocol._REQ_JOIN_SESSION + protocol._MSG_FIELD_SEP + str(self.currentSession.game_id))
+        # TODO: use simpler output for the joining session (on server!)
+        if rsp.startswith(protocol._ACK):
+            self.session = self.currentSession  # TODO: maybe not necessary
+            self.gameName = self.currentSession.game_name
+            self.root.destroy()
+            return rsp
+        elif rsp.startswith(protocol._RSP_SESSION_FULL):
             tkMessageBox.showinfo('Session is full!', 'Oops.. people already having fun on this session. Try another!')
         else:
-            self.session = rsp # TODO***: session must be filled using ICUpdateLink
-            self.root.destroy()
-
+            print 'UUID is not available?' # TODO: what's this? perhaps need another flag in response for this situation!
 
     def get_current_sessions(self,client):
         '''

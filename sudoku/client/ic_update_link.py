@@ -52,7 +52,10 @@ class ICUpdate_link:
             print("about to update gui")
             # FIXME***: I think we need to activate a flag in GamePlay that calls following update
             # because otherwise we get something related to main loop issue
-            self.gui.update(self.latest_game)
+            try:
+                self.gui.update(self.latest_game)
+            except Exception as e:
+                print("[ERROR] Some error with gui rendering: ", e)
         else:
             for row in self.latest_game.game_state:
                 print row
