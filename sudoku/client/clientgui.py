@@ -19,6 +19,7 @@ class ClientGUI:
         self.name = None
         self.client_ip = None
         self.rpcClient = None
+        self.server_ip = None
         self.ic_update_link = None  # initialized after multiplayerGameDialog
 
     def leave_session(self):

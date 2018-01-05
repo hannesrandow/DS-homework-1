@@ -17,13 +17,13 @@ CELL = (LENGTH - 2 * MARGIN) / 9
 
 class Gameplay:
     # ICUpdateLink: replacement for the GameUPdateLink:
-    def start_session_thread(self, game_name, gui, current_session):
+    def start_session_thread(self, game_name, gui, current_session, server_ip):
         """
         Use this method to start the publish subscribe scenario for game updates as a deamon thread.
         :param game_name: Name of the game and also of the exchange
         :return: None
         """
-        self.client.ic_update_link = ICUpdate_link(game_name, gui, current_session)
+        self.client.ic_update_link = ICUpdate_link(game_name, gui, current_session, server_ip=server_ip)
 
     def __init__(self, serv_addr, gameName, client):
         self.client = client
@@ -37,13 +37,16 @@ class Gameplay:
         self.canvasSudoku.bind("<Button-1>", self.cell_clicked)
         self.canvasSudoku.bind("<Key>", self.key_pressed)
         self.draw_grid()
-        self.init_phase = True
 
         # Let the pub/sub run as deamon thread
-        t = threading.Thread(target=self.start_session_thread, args=(gameName, self, self.current_session))
-        t.daemon = True
-        t.start()
-        print("ICUpdateLink started..")
+        if self.client.server_ip:
+            t = threading.Thread(target=self.start_session_thread, args=(gameName, self, self.current_session, self.client.server_ip))
+            t.daemon = True
+            t.start()
+            print("ICUpdateLink started..")
+        else:
+            print("for some reason the server ip is None [from EnterServerAddressDialog]!")
+            self.root.destroy()
 
         time.sleep(2)
         self.client.update(self, self.row, self.col, value='a',

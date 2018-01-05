@@ -7,15 +7,14 @@ On client side.
 """
 class ICUpdate_link:
 
-    def __init__(self, game_name, gui=None, session=None):
+    def __init__(self, game_name, gui=None, session=None, server_ip='127.0.0.1'):
         #incidently the same name as the game
         self.game_name = game_name
         self.threaddd = None
         self.__shouldRunning = True
         self.gui = gui
         self.latest_game = session
-        # TODO***: use IP variable/parameter to get connected!
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='127.0.0.1'))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=server_ip))
         self.channel = self.connection.channel()
         self.channel.exchange_declare(exchange=self.game_name,
                                       exchange_type='fanout')

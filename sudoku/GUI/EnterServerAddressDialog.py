@@ -44,6 +44,7 @@ class EnterServerAddressDialog:
         if r.match(address) is not None:
             try:
                 self.client.rpcClient = RpcClient(address)
+                self.client.server_ip = address
                 self.root.destroy()
             except Exception as e:
                 tkMessageBox.showerror("Connection refused", "Server not found")
