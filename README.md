@@ -1,7 +1,8 @@
 # DS-homework-2
 
 This is a Suduko game implemented as the second project of the [Distributed Systems (MTAT.08.009)](https://courses.cs.ut.ee/2017/ds/fall)
-at University of Tartu in Fall 2017. Its main functionalities include indictect communiatin and server discovery.
+at University of Tartu in Fall 2017. Its main functionalities include indictect communiatin and server discovery satisfying
+task 1, 2, and 3 of the [HW2](https://courses.cs.ut.ee/MTAT.08.009/2017_fall/uploads/Main/DS_HW2.pdf).
 
 ## Setup
 **Dependencies**: tkinter and rabbitmq library.
