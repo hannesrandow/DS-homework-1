@@ -1,0 +1,1 @@
+pika # rabbit-mq python implementation
