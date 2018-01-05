@@ -17,13 +17,13 @@ CELL = (LENGTH - 2 * MARGIN) / 9
 
 class Gameplay:
     # ICUpdateLink: replacement for the GameUPdateLink:
-    def start_session_thread(self, game_name):
+    def start_session_thread(self, game_name, gui, current_session):
         """
         Use this method to start the publish subscribe scenario for game updates as a deamon thread.
         :param game_name: Name of the game and also of the exchange
         :return: None
         """
-        self.client.ic_update_link = ICUpdate_link(game_name, self, self.current_session)
+        self.client.ic_update_link = ICUpdate_link(game_name, gui, current_session)
 
     def __init__(self, serv_addr, gameName, client):
         self.client = client
@@ -40,7 +40,7 @@ class Gameplay:
         self.init_phase = True
 
         # Let the pub/sub run as deamon thread
-        t = threading.Thread(target=self.start_session_thread, args=(gameName,))
+        t = threading.Thread(target=self.start_session_thread, args=(gameName, self, self.current_session))
         t.daemon = True
         t.start()
         print("ICUpdateLink started..")
@@ -54,7 +54,10 @@ class Gameplay:
             print("session received..")
         else:
             print("session is empty -- probably from multiplayerdialog")
-        time.sleep(2)
+        while self.current_session is None:
+            print("wiating to get not None!")
+            time.sleep(1)
+
         self.draw_numbers()
         self.frameScoreInput = Frame(self.root)
         self.frameScoreInput.grid(row=0, column=1, padx=10, pady=10)

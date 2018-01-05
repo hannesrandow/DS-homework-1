@@ -61,7 +61,7 @@ class ClientGUI:
         if dummy_update:
             return
         else:
-            gui.update(update_request[0])
+            print("game should be updated by ICUpdate soon..")
 
     '''
     def update(self, user_action, current_session):
